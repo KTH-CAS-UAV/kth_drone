@@ -3,13 +3,24 @@
 		<!-- launch state publisher of rviz drone model -->
 			<include file="$(find drone_model)/launch/state_publisher.launch"/>
 
-		<!-- launch mavros px4 TODO:: adjust udp mabey?? -->
+		<!-- launch gazebo cage sim-->
+			<include file="$(find px4)/launch/posix_sitl_cage.launch">
+				<arg name="gui" value="true" />				
+			</include>
+
+		<!-- launch mavros px4 -->
 			<include file="$(find mavros)/launch/px4.launch">
-				<arg name="fcu_url" value="udp://:14540@192.168.1.36:14557"/>				
+				<arg name="fcu_url" value="udp://:14540@127.0.0.1:14557" />				
 			</include>
 		
 
 	<!-- launch nodes-->
+
+		<!-- cheap simulation node -->
+			<!--node name="cheap_simulator" pkg="cheap_simulator" type="cheap_simulator"/-->
+
+		<!-- simple cycle view planning -->
+			<!--node name="simple_vp" pkg="simple_vp" type="simple_vp"/-->
 		
 		<!-- tf node -->
 			<node name="tf_pub" pkg="tf_pub" type="tf_pub" output="screen" />
@@ -26,7 +37,6 @@
 
 		<!-- map cloud node --> 
 			<!--node name="map_as_pointcloude" pkg="map_as_pointcloude" type="map_as_pointcloude"/-->
-
 		<!-- rely map cloud to camera depth for octo-->
 			<!--node name="relay" pkg="topic_tools" type="relay" args="/map/cage_cloud /camera/depth/points "/-->
 
@@ -38,7 +48,7 @@
 			<node name="simple_vp" pkg="simple_vp" type="simple_vp" output="screen" >
 				<param name="vp_radius" type="string" value="0.85" />
 				<param name="num_vp" type="string" value="10.0" />
-				<param name="vp_z" type="string" value="1.0" />
+				<param name="vp_z" type="string" value="1.5" />
 			</node>
 
 
@@ -76,5 +86,5 @@
 </node>
 	
 	<!-- start rviz-->
-		<!--node name="visualisation" pkg="rviz" type="rviz" output="screen" /-->
+		<node name="visualisation" pkg="rviz" type="rviz" output="screen" />
 </launch>

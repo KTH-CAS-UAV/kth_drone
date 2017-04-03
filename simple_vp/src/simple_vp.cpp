@@ -194,11 +194,11 @@ class simple_vp
 
     void getcyrcleparam(){
       //check if param are ther else use defult of 0.75 and 10
-      std::string s;
-      if (node.getParam("/simple_vp/vp_radius", s))
+      double d;
+      if (node.getParam("/simple_vp/vp_radius", d))
       {
-        ROS_INFO("Got param: %s", s.c_str());
-        viewpoint_radius= atof(s.c_str());
+        ROS_INFO("Got param: %f", d);
+        viewpoint_radius= d;
       }
       else
       {
@@ -206,10 +206,10 @@ class simple_vp
         viewpoint_radius=0.75;
       }
 
-      if (node.getParam("/simple_vp/num_vp", s))
+      if (node.getParam("/simple_vp/num_vp", d))
       {
-        ROS_INFO("Got param: %s", s.c_str());
-        num_viepoints= atof(s.c_str());
+        ROS_INFO("Got param: %f", d);
+        num_viepoints= d;
       }
       else
       {
@@ -218,6 +218,24 @@ class simple_vp
       }
 
 
+    }
+
+    double getzparam(){
+
+      double d;
+      double vp_z;
+      if (node.getParam("/simple_vp/vp_z", d))
+      {
+        //ROS_INFO("Got param: %f", d);
+        vp_z= d;
+      }
+      else
+      {
+        ROS_INFO("Failed to get param '/simple_vp/vp_radius' setting to defult (1)");
+        vp_z=1.0;
+      }
+
+      return vp_z;
     }
 
 
@@ -237,11 +255,11 @@ class simple_vp
 
 
 int main(int argc, char **argv){
-  ros::init(argc, argv, "simple_vp");
-  
+  ros::init(argc, argv, "simple_vp"); 
 
   simple_vp vp; 
 
+  ros::Duration(5.0).sleep(); // sleep a little 
   ros::Rate rate(20.0);
   vp.getcyrcleparam();
   
@@ -304,6 +322,9 @@ int main(int argc, char **argv){
 
     while(ros::ok() ){
         pose=vp.vp_vec_all[vp.view_point_number];
+        // read z from param server
+        pose.pose.position.z = vp.getzparam();
+
         ros::spinOnce();
         vp.publish_vp(vp.vp_vec_all);
 

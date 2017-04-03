@@ -11,7 +11,7 @@ class tf_pub
     {
       sub = node.subscribe("/mavros/local_position/pose", 10, &tf_pub::mavrosposeCallback, this);
       //subgazebo = node.subscribe("/gazebo/model_states", 10, &tf_pub::gazeboposeCallback, this);
-      pubgazebo = node.advertise<geometry_msgs::PoseStamped>("/vision_pose/pose", 1000, this);
+      //pubgazebo = node.advertise<geometry_msgs::PoseStamped>("/vision_pose/pose", 1000, this);
     }
 
   private:
@@ -26,6 +26,7 @@ class tf_pub
     br.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "world", "drone_base"));
   }
 
+/*
   void gazeboposeCallback(const gazebo_msgs::ModelStates::ConstPtr& msg){
     
     tf::Transform transform;
@@ -51,6 +52,7 @@ class tf_pub
   
     pubgazebo.publish(posemsg);
   }
+*/
 
   tf::TransformBroadcaster br;
   ros::NodeHandle node;
