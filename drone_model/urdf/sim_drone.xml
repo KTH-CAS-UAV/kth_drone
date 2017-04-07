@@ -1,0 +1,44 @@
+<?xml version="1.0"?>
+<robot  xmlns:xacro="http://www.ros.org/wiki/xacro" name="sim_drone">
+
+  <link name="drone_base">
+    <visual>
+      <geometry>
+        <box size="0.25 .25 .10"/>
+      </geometry>
+      <origin rpy="0 0 0" xyz="0 0 0.05"/>
+	<material name="rgb">
+	<color rgba="0 1.0 1.0 1.0"/>
+	</material>
+    </visual>
+  </link>
+
+
+ <link name="d_camera">
+    <visual>
+      <geometry>
+        <box size=".05 .05 .05"/>
+      </geometry>
+      <origin rpy="0 0 0 " xyz="0.0 0.0 0.0"/>
+	<material name="black">
+	<color rgba="0.0 0.0 0.0 1.0"/>
+	</material>
+    </visual>
+  </link>
+  <joint name="drone_base_to_d_camera" type="fixed">
+    <parent link="drone_base"/>
+    <child link="d_camera"/>
+    <origin rpy="0 0 0" xyz="0.12 0.0 0.05"/>
+  </joint>
+
+  <link name="d_camera::camera_link"/>
+  <joint name="d_camera_to_camera_link" type="fixed">
+    <parent link="d_camera"/>
+    <child link="d_camera::camera_link"/>
+    <!--origin rpy="0 0 0" xyz="0.0 0.0 0.0"/-->
+    <origin rpy="-1.57 0 -1.57" xyz="0.0 0.0 0.0"/>
+  </joint>
+
+
+
+</robot>

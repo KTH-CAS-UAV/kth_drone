@@ -1,0 +1,5 @@
+<launch>
+	<node name="object_cloud" pkg="object_cloud" type="object_cloud" output="screen">
+		<remap from="/cloud_in" to="/camera/depth/points" />
+	</node>
+</launch>
