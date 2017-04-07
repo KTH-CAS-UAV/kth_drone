@@ -197,40 +197,30 @@ class simple_vp
       double d;
       if (node.getParam("/simple_vp/vp_radius", d))
       {
-<<<<<<< HEAD
+
         ROS_INFO_THROTTLE(1 , "Got param: %f", d);
-=======
-        ROS_INFO("Got param: %f", d);
->>>>>>> cd2e656fd5c9e538300a175ccca7d60ed11136f8
+
         viewpoint_radius= d;
       }
       else
       {
-<<<<<<< HEAD
+
         ROS_WARN_THROTTLE(1, "Failed to get param '/simple_vp/vp_radius' setting to defult (0.55)");
         viewpoint_radius=0.55;
-=======
-        ROS_INFO("Failed to get param '/simple_vp/vp_radius' setting to defult (0.75)");
-        viewpoint_radius=0.75;
->>>>>>> cd2e656fd5c9e538300a175ccca7d60ed11136f8
+
       }
 
       if (node.getParam("/simple_vp/num_vp", d))
       {
-<<<<<<< HEAD
+
         ROS_INFO_THROTTLE(1, "Got param: %f", d);
-=======
-        ROS_INFO("Got param: %f", d);
->>>>>>> cd2e656fd5c9e538300a175ccca7d60ed11136f8
         num_viepoints= d;
       }
       else
       {
-<<<<<<< HEAD
+
         ROS_WARN_THROTTLE(1, "Failed to get param '/simple_vp/num_vp' setting to defult (10)");
-=======
-        ROS_INFO("Failed to get param '/simple_vp/num_vp' setting to defult (10)");
->>>>>>> cd2e656fd5c9e538300a175ccca7d60ed11136f8
+
         num_viepoints=10;
       }
 
@@ -243,20 +233,16 @@ class simple_vp
       double vp_z;
       if (node.getParam("/simple_vp/vp_z", d))
       {
-<<<<<<< HEAD
+
         ROS_INFO_THROTTLE(1, "Got param: %f", d);
-=======
-        //ROS_INFO("Got param: %f", d);
->>>>>>> cd2e656fd5c9e538300a175ccca7d60ed11136f8
+
         vp_z= d;
       }
       else
       {
-<<<<<<< HEAD
+
         ROS_WARN_THROTTLE(1, "Failed to get param '/simple_vp/vp_z' setting to defult (1.0)");
-=======
-        ROS_INFO("Failed to get param '/simple_vp/vp_radius' setting to defult (1)");
->>>>>>> cd2e656fd5c9e538300a175ccca7d60ed11136f8
+
         vp_z=1.0;
       }
 
