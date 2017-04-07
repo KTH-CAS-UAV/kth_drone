@@ -197,30 +197,23 @@ class simple_vp
       double d;
       if (node.getParam("/simple_vp/vp_radius", d))
       {
-
         ROS_INFO_THROTTLE(1 , "Got param: %f", d);
-
         viewpoint_radius= d;
       }
       else
       {
-
         ROS_WARN_THROTTLE(1, "Failed to get param '/simple_vp/vp_radius' setting to defult (0.55)");
         viewpoint_radius=0.55;
-
       }
 
       if (node.getParam("/simple_vp/num_vp", d))
       {
-
         ROS_INFO_THROTTLE(1, "Got param: %f", d);
         num_viepoints= d;
       }
       else
       {
-
         ROS_WARN_THROTTLE(1, "Failed to get param '/simple_vp/num_vp' setting to defult (10)");
-
         num_viepoints=10;
       }
 
@@ -233,16 +226,12 @@ class simple_vp
       double vp_z;
       if (node.getParam("/simple_vp/vp_z", d))
       {
-
         ROS_INFO_THROTTLE(1, "Got param: %f", d);
-
         vp_z= d;
       }
       else
       {
-
         ROS_WARN_THROTTLE(1, "Failed to get param '/simple_vp/vp_z' setting to defult (1.0)");
-
         vp_z=1.0;
       }
 
