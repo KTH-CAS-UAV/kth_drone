@@ -1,0 +1,9 @@
+<launch>
+
+<!-- simple automatic controll node -->
+                        <node name="simple_vp" pkg="simple_vp" type="simple_vp" output="screen" >
+                                <param name="vp_radius" type="double" value="0.55" />
+                                <param name="num_vp" type="double" value="10.0" />
+                                <param name="vp_z" type="double" value="1.0" />
+                        </node>
+</launch>
