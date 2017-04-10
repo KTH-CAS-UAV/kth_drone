@@ -44,12 +44,15 @@
 		<!-- Rviz manual controll node -->
 			<!--node name="rviz_controll" pkg="rviz_controll" type="rviz_controll" output="screen" /-->
 
-		<!-- simple automatic controll node -->
+		<!-- simple vp node controll node -->
 			<node name="simple_vp" pkg="simple_vp" type="simple_vp" output="screen" >
-				<param name="vp_radius" type="string" value="0.85" />
-				<param name="num_vp" type="string" value="10.0" />
-				<param name="vp_z" type="string" value="1.5" />
+				<param name="vp_radius" type="double" value="0.85" />
+				<param name="num_vp" type="double" value="10.0" />
+				<param name="vp_z" type="double" value="1.5" />
 			</node>
+
+		<!-- Rviz manual controll node -->
+			<node name="auto_teleop" pkg="auto_teleop" type="auto_teleop" output="screen" />
 
 
 
