@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<package>
+  <name>kth_drone</name>
+  <version>0.0.7</version>
+  <description>Catkin metapackage for the KTH_drone stack</description>
+  <maintainer email="mwelle@kth.se">KTH</maintainer>
+  <license>TODO</license>
+  
+  <author email="mwelle@kth.se">mwelle</author>
+  
+  <buildtool_depend>catkin</buildtool_depend>
+  <run_depend>drone_model</run_depend>
+  <run_depend>map_as_pointcloud</run_depend>
+  <run_depend>object_octo</run_depend>
+  <run_depend>rviz_controll</run_depend>
+  <run_depend>simple_vp</run_depend>
+  <run_depend>teleop</run_depend>
+  <run_depend>auto_teleop</run_depend>
+  <run_depend>tf_pub</run_depend>
+
+  <export>
+    <metapackage/>
+  </export>
+</package>

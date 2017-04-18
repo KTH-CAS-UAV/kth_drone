@@ -226,7 +226,7 @@ class simple_vp
       double vp_z;
       if (node.getParam("/simple_vp/vp_z", d))
       {
-        ROS_INFO_THROTTLE(1, "Got param: %f", d);
+        //ROS_INFO_THROTTLE(1, "Got param: %f", d);
         vp_z= d;
       }
       else

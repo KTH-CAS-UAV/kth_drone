@@ -1,0 +1,7 @@
+<launch>
+  <!-- tf tree-->
+    <node name="tf_tree" pkg="drone_model" type="tf_tree" output="screen" />			
+    <node pkg="tf" type="static_transform_publisher" name="tf_cameras" args=" 0 0 0 0 0 0 d_camera camera_link 10" />
+    <node pkg="tf" type="static_transform_publisher" name="tf_world_target" args="0.0 0 1.0 0 0 0 world target 10" />
+    <!--node pkg="tf" type="static_transform_publisher" name="tf_world_fcu" args=" 0.0 0 0.0 0 0 0 world fcu 10" /-->
+</launch>

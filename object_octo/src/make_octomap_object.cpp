@@ -53,13 +53,38 @@ public:
 octomap::ColorOcTree color_tree ;
 tf::Vector3 target;
 double targetsize;
-  CloudAssembler():color_tree(0.005),target(1.0,0.0,1.6),targetsize(0.5)
+  CloudAssembler():color_tree(0.005),targetsize(2.0)
 {
   ros::NodeHandle private_nh("~");
 
   output_pub_ = node_.advertise<octomap_msgs::Octomap> ("/assembled_cloud", 1);
 
   cloud_sub_ = node_.subscribe("/cloud_in", 1, &CloudAssembler::cloudCallback, this);
+
+
+  //get target
+  bool gottarget=false;
+
+  while(!gottarget)
+  {
+    tf::StampedTransform transform;
+
+      // get tf transform from world to target frame
+      try{
+        listener.lookupTransform("/world", "/target",  
+                                 ros::Time(0), transform);
+
+          tf::Vector3 temp(transform.getOrigin().x(),transform.getOrigin().y(),transform.getOrigin().z()); // target point 3D
+          target=temp;
+          gottarget=true;
+
+        }
+      catch (tf::TransformException ex){
+        ROS_ERROR("%s",ex.what());
+        ros::Duration(0.1).sleep();
+        }  
+  }
+  
 
 
 }

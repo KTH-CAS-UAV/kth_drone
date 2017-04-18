@@ -1,5 +1,6 @@
 <launch>
 	<node name="object_octo" pkg="object_octo" type="object_octo" output="screen">
-		<remap from="/cloud_in" to="/camera/depth/points" />
+		<!--remap from="/cloud_in" to="/camera/depth/points" /-->
+		<remap from="/cloud_in" to="/camera/depth_registered/points" />
 	</node>
 </launch>

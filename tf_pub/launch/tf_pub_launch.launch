@@ -1,6 +1,0 @@
-<launch>
-	<node name="simple_vp" pkg="simple_vp" type="simple_vp" output="screen" >
-				<param name="vp_radius" type="string" value="0.85" />
-				<param name="num_vp" type="string" value="10.0" />
-			</node>
-</launch>
