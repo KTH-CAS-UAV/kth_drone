@@ -16,7 +16,6 @@
   <run_depend>simple_vp</run_depend>
   <run_depend>teleop</run_depend>
   <run_depend>auto_teleop</run_depend>
-  <run_depend>tf_pub</run_depend>
 
   <export>
     <metapackage/>
