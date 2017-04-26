@@ -114,6 +114,8 @@ int main(int argc, char **argv)
   
 
   bool atposition=false;
+  bool atperfectpos=false;
+  bool helpflag=false;
   bool timestarted=false;
   ros::Time start_time;
   while (ros::ok())
@@ -136,6 +138,7 @@ int main(int argc, char **argv)
       timestarted=false;
     }
 
+
     if(atposition==true && timestarted==false)
     {
       start_time = ros::Time::now();  
@@ -148,6 +151,25 @@ int main(int argc, char **argv)
       ROS_INFO_STREAM("sending");
       at->pub_teleop.publish(msg);
       timestarted=false;
+      helpflag=false;
+    }
+
+    //check if in perfec pos
+    if(errorx<at->tol_xy/5 && errory< at->tol_xy/5 && erroryaw < at->tol_yaw/5)
+    {
+      atperfectpos=true;
+    }
+    else
+    {
+      atperfectpos=false;
+    }
+
+    if(atperfectpos && !helpflag)
+    {
+      msg.data="p";
+      ROS_INFO_STREAM("perfect sending");
+      at->pub_teleop.publish(msg);      
+      helpflag=true;
     }
 
     ros::spinOnce();
