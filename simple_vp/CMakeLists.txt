@@ -11,10 +11,13 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   std_msgs
   tf
-tf_conversions
+  tf_conversions
+  dynamic_reconfigure
 )
 
-
+generate_dynamic_reconfigure_options(
+  cfg/s_vp.cfg
+)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -81,6 +84,7 @@ target_link_libraries(simple_vp
 ${catkin_LIBRARIES}
 )
 
+add_dependencies(simple_vp ${PROJECT_NAME}_gencfg)
 
 
 

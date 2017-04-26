@@ -28,10 +28,16 @@
 #include <mavros_msgs/State.h>
 
 
+// Dynamic reconfigure includes.
+#include <dynamic_reconfigure/server.h>
+// Auto-generated from cfg/ directory.
+#include <simple_vp/s_vpConfig.h>
+
+
 
 using namespace std;
 
-class simple_vp
+class simple_vp_class
 {
   public:
 
@@ -43,6 +49,7 @@ class simple_vp
 
     double viewpoint_radius;
     double num_viepoints;
+    double setpoint_z;
 
       //drone mavros com
     ros::Subscriber state_sub;
@@ -51,16 +58,16 @@ class simple_vp
     ros::ServiceClient set_mode_client;
 
 
-    simple_vp():circleflag(false),view_point_number(5)
+    simple_vp_class():circleflag(false),view_point_number(5)
     {
 
       // sub
       vp_pub = node.advertise<geometry_msgs::PoseArray>( "view_points", 0 );
-      sub_map = node.subscribe("/projected_map", 10, &simple_vp::map2DCallback, this);
+      sub_map = node.subscribe("/projected_map", 10, &simple_vp_class::map2DCallback, this);
 
       // drone mavros stuff
      state_sub = node.subscribe<mavros_msgs::State>
-            ("mavros/state", 10, &simple_vp::state_cb, this);
+            ("mavros/state", 10, &simple_vp_class::state_cb, this);
     
     local_pos_pub = node.advertise<geometry_msgs::PoseStamped>
             ("mavros/setpoint_position/local", 10);
@@ -70,7 +77,7 @@ class simple_vp
             ("mavros/set_mode");
 
     //teleop subscribe
-    sub_teleop_vp_num = node.subscribe("/teleop/keyinput", 10, &simple_vp::keyinputCallback, this);
+    sub_teleop_vp_num = node.subscribe("/teleop/keyinput", 10, &simple_vp_class::keyinputCallback, this);
 
 
       vp_vec_all.clear();
@@ -220,6 +227,7 @@ class simple_vp
 
     }
 
+/*
     double getzparam(){
 
       double d;
@@ -237,6 +245,14 @@ class simple_vp
 
       return vp_z;
     }
+*/
+
+  void configCallback(simple_vp::s_vpConfig &config, uint32_t level)
+  {
+       ROS_INFO("Reconfigure");
+       setpoint_z=config.setpoint_z;
+       
+  } // end configCallback()
 
 
 
@@ -257,11 +273,11 @@ class simple_vp
 int main(int argc, char **argv){
   ros::init(argc, argv, "simple_vp"); 
 
-  simple_vp vp; 
+  simple_vp_class *vp = new simple_vp_class; 
 
   ros::Duration(5.0).sleep(); // sleep a little 
   ros::Rate rate(20.0);
-  vp.getcyrcleparam();
+  vp->getcyrcleparam();
   
   //basic view planner#
   /*
@@ -272,14 +288,26 @@ int main(int argc, char **argv){
 
   */
   
+  // Set up a dynamic reconfigure server.
+  // This should be done before reading parameter server values.
+  dynamic_reconfigure::Server<simple_vp::s_vpConfig> dr_srv;
+  dynamic_reconfigure::Server<simple_vp::s_vpConfig>::CallbackType cb;
+  cb = boost::bind(&simple_vp_class::configCallback,vp, _1, _2);
+  dr_srv.setCallback(cb);
 
-
+  // Initialize node parameters from launch file or command line.
+  // Use a private node handle so that multiple instances of the node can
+  // be run simultaneously while using different parameters.
+  // Parameters defined in the .cfg file do not need to be initialized here
+  // as the dynamic_reconfigure::Server does this for you.
+  ros::NodeHandle private_node_handle_("~");
+  private_node_handle_.param("setpoint_z", vp->setpoint_z, double(0.8));
   
 
-  while(!vp.circleflag){
+  while(!vp->circleflag){
 
     // use parameter to set number of view points and radius
-    vp.circular_vp("/target",(double)vp.viewpoint_radius,(double)vp.num_viepoints);
+    vp->circular_vp("/target",(double)vp->viewpoint_radius,(double)vp->num_viepoints);
     //vp.circular_vp("/target",1.0,10.0);
     
     rate.sleep();
@@ -289,7 +317,7 @@ int main(int argc, char **argv){
   //conect drone
   ROS_INFO("Starting");
      // wait for FCU connection
-    while(ros::ok() && vp.current_state.connected){
+    while(ros::ok() && vp->current_state.connected){
         ros::spinOnce();
         rate.sleep();
     }
@@ -307,7 +335,7 @@ int main(int argc, char **argv){
 
     //send a few setpoints before starting
     for(int i = 100; ros::ok() && i > 0; --i){
-        vp.local_pos_pub.publish(pose);
+        vp->local_pos_pub.publish(pose);
         ros::spinOnce();
         rate.sleep();
     }
@@ -321,25 +349,25 @@ int main(int argc, char **argv){
     ros::Time last_request = ros::Time::now();     
 
     while(ros::ok() ){
-        pose=vp.vp_vec_all[vp.view_point_number];
+        pose=vp->vp_vec_all[vp->view_point_number];
         // read z from param server
-        pose.pose.position.z = vp.getzparam();
+        pose.pose.position.z = vp->setpoint_z;// getzparam();
 
         ros::spinOnce();
-        vp.publish_vp(vp.vp_vec_all);
+        vp->publish_vp(vp->vp_vec_all);
 
         
-        if( vp.current_state.mode != "OFFBOARD" &&
+        if( vp->current_state.mode != "OFFBOARD" &&
             (ros::Time::now() - last_request > ros::Duration(1.0))){
-            if( vp.set_mode_client.call(offb_set_mode) &&
+            if( vp->set_mode_client.call(offb_set_mode) &&
                 offb_set_mode.response.success){
                 ROS_INFO("Offboard enabled");
             }
             last_request = ros::Time::now();
         } else {
-            if( !vp.current_state.armed &&
+            if( !vp->current_state.armed &&
                 (ros::Time::now() - last_request > ros::Duration(1.0))){
-                if( vp.arming_client.call(arm_cmd) &&
+                if( vp->arming_client.call(arm_cmd) &&
                     arm_cmd.response.success){
                     ROS_INFO("Vehicle armed");
                 }
@@ -347,7 +375,7 @@ int main(int argc, char **argv){
             }
         }
 
-        vp.local_pos_pub.publish(pose);
+        vp->local_pos_pub.publish(pose);
         
     }
   

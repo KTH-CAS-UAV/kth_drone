@@ -4,6 +4,9 @@ project(auto_teleop)
 ## Add support for C++11, supported in ROS Kinetic and newer
 # add_definitions(-std=c++11)
 
+
+
+
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
@@ -11,7 +14,13 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   std_msgs
   tf
+  dynamic_reconfigure
 )
+
+generate_dynamic_reconfigure_options(
+  cfg/a_teleop.cfg
+)
+
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -137,6 +146,8 @@ include_directories(
 
 add_executable(auto_teleop src/auto_teleop.cpp)
 target_link_libraries(auto_teleop ${catkin_LIBRARIES})
+
+add_dependencies(auto_teleop ${PROJECT_NAME}_gencfg)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
