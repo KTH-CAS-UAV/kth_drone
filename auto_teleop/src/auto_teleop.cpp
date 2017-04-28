@@ -101,8 +101,8 @@ int main(int argc, char **argv)
   // Parameters defined in the .cfg file do not need to be initialized here
   // as the dynamic_reconfigure::Server does this for you.
   ros::NodeHandle private_node_handle_("~");
-  private_node_handle_.param("tol_xy", at->tol_xy, double(0.05));
-  private_node_handle_.param("tol_yaw", at->tol_yaw, double(5));
+  private_node_handle_.param("tol_xy", at->tol_xy, double(0.25));
+  private_node_handle_.param("tol_yaw", at->tol_yaw, double(25));
 
 
   std_msgs::String msg;

@@ -301,7 +301,7 @@ int main(int argc, char **argv){
   // Parameters defined in the .cfg file do not need to be initialized here
   // as the dynamic_reconfigure::Server does this for you.
   ros::NodeHandle private_node_handle_("~");
-  private_node_handle_.param("setpoint_z", vp->setpoint_z, double(0.8));
+  private_node_handle_.param("setpoint_z", vp->setpoint_z, double(1.2));
   
 
   while(!vp->circleflag){
@@ -327,7 +327,7 @@ int main(int argc, char **argv){
     geometry_msgs::PoseStamped pose;
     pose.pose.position.x = 0;
     pose.pose.position.y = 0;
-    pose.pose.position.z = 1.5;
+    pose.pose.position.z = 1.2;
     pose.pose.orientation.x = 0;
     pose.pose.orientation.y = 0;
     pose.pose.orientation.z = 0;
