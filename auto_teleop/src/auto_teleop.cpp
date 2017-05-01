@@ -85,7 +85,7 @@ int main(int argc, char **argv)
 
   auto_teleop_class *at = new auto_teleop_class;
   
-  ros::Rate loop_rate(10);
+  ros::Rate loop_rate(5);
 
   // Set up a dynamic reconfigure server.
   // This should be done before reading parameter server values.
@@ -101,14 +101,15 @@ int main(int argc, char **argv)
   // Parameters defined in the .cfg file do not need to be initialized here
   // as the dynamic_reconfigure::Server does this for you.
   ros::NodeHandle private_node_handle_("~");
-  private_node_handle_.param("tol_xy", at->tol_xy, double(0.25));
-  private_node_handle_.param("tol_yaw", at->tol_yaw, double(25));
+  private_node_handle_.param("tol_xy", at->tol_xy, double(0.3));
+  private_node_handle_.param("tol_yaw", at->tol_yaw, double(20));
 
 
   std_msgs::String msg;
 
   double errorx=std::numeric_limits<double>::max();
   double errory=std::numeric_limits<double>::max();
+  double errorz=std::numeric_limits<double>::max();
   double erroryaw=std::numeric_limits<double>::max();
 
   
@@ -125,10 +126,11 @@ int main(int argc, char **argv)
     //calc erorrs (only x,y yaw are of interest)
     errorx=fabs(at->targetPoint.pose.position.x-at->droneposPoint.pose.position.x);
     errory=fabs(at->targetPoint.pose.position.y-at->droneposPoint.pose.position.y);
-    erroryaw = distance(tf::getYaw(at->targetPoint.pose.orientation)*(180/M_PI),tf::getYaw(at->droneposPoint.pose.orientation)*(180/M_PI));
+    errorz=fabs(at->targetPoint.pose.position.z-at->droneposPoint.pose.position.z); 
+   erroryaw = distance(tf::getYaw(at->targetPoint.pose.orientation)*(180/M_PI),tf::getYaw(at->droneposPoint.pose.orientation)*(180/M_PI));
     
     //check if error is in margin
-    if(errorx<at->tol_xy && errory< at->tol_xy && erroryaw < at->tol_yaw)
+    if(errorx<at->tol_xy && errory< at->tol_xy && errorz< at->tol_xy && erroryaw < at->tol_yaw)
     {
       atposition=true;
     }
@@ -155,7 +157,7 @@ int main(int argc, char **argv)
     }
 
     //check if in perfec pos
-    if(errorx<at->tol_xy/5 && errory< at->tol_xy/5 && erroryaw < at->tol_yaw/5)
+    if(errorx<at->tol_xy/5 && errory< at->tol_xy/5 && errorz < at->tol_xy && erroryaw < at->tol_yaw/5)
     {
       atperfectpos=true;
     }

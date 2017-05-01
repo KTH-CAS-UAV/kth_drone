@@ -58,7 +58,7 @@ class simple_vp_class
     ros::ServiceClient set_mode_client;
 
 
-    simple_vp_class():circleflag(false),view_point_number(5)
+    simple_vp_class():circleflag(false),view_point_number(10)
     {
 
       // sub
@@ -70,7 +70,7 @@ class simple_vp_class
             ("mavros/state", 10, &simple_vp_class::state_cb, this);
     
     local_pos_pub = node.advertise<geometry_msgs::PoseStamped>
-            ("mavros/setpoint_position/local", 10);
+            ("mavros/setpoint_position/local", 100);
     arming_client = node.serviceClient<mavros_msgs::CommandBool>
             ("mavros/cmd/arming");
     set_mode_client = node.serviceClient<mavros_msgs::SetMode>
@@ -97,7 +97,7 @@ class simple_vp_class
 
       std::string strinput =msg->data.c_str();
       
-      if(strinput=="n"){
+      if(strinput=="n" || strinput=="p"){
         view_point_number=view_point_number+1;
           if(view_point_number>=vp_vec_all.size())
             view_point_number=0;
@@ -209,8 +209,8 @@ class simple_vp_class
       }
       else
       {
-        ROS_WARN_THROTTLE(1, "Failed to get param '/simple_vp/vp_radius' setting to defult (0.55)");
-        viewpoint_radius=0.55;
+        ROS_WARN_THROTTLE(1, "Failed to get param '/simple_vp/vp_radius' setting to defult (0.8)");
+        viewpoint_radius=0.8;
       }
 
       if (node.getParam("/simple_vp/num_vp", d))
@@ -220,8 +220,8 @@ class simple_vp_class
       }
       else
       {
-        ROS_WARN_THROTTLE(1, "Failed to get param '/simple_vp/num_vp' setting to defult (10)");
-        num_viepoints=10;
+        ROS_WARN_THROTTLE(1, "Failed to get param '/simple_vp/num_vp' setting to defult (20)");
+        num_viepoints=20;
       }
 
 
@@ -276,7 +276,7 @@ int main(int argc, char **argv){
   simple_vp_class *vp = new simple_vp_class; 
 
   ros::Duration(5.0).sleep(); // sleep a little 
-  ros::Rate rate(20.0);
+  ros::Rate rate(50.0);
   vp->getcyrcleparam();
   
   //basic view planner#
