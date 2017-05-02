@@ -70,7 +70,7 @@ class simple_vp_class
             ("mavros/state", 10, &simple_vp_class::state_cb, this);
     
     local_pos_pub = node.advertise<geometry_msgs::PoseStamped>
-            ("mavros/setpoint_position/local", 100);
+            ("mavros/setpoint_position/local", 1);
     arming_client = node.serviceClient<mavros_msgs::CommandBool>
             ("mavros/cmd/arming");
     set_mode_client = node.serviceClient<mavros_msgs::SetMode>
