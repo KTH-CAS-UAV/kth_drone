@@ -3,7 +3,8 @@
 
 	<!-- launch mavros px4 -->
 		<include file="$(find mavros)/launch/px4.launch">
-                    <arg name="fcu_url" value="/dev/serial/by-id/usb-3D_Robotics_PX4_FMU_v4.x_0-if00:921600"/>
+                    <!--arg name="fcu_url" value="/dev/serial/by-id/usb-3D_Robotics_PX4_FMU_v4.x_0-if00:57600"/-->
+                    <arg name="fcu_url" value="/dev/serial/by-id/usb-FTDI_TTL232R_FT97WS3V-if00-port0:921600"/>
                 </include>
 
 	<!-- launch mavros optitrack node ?? -->
