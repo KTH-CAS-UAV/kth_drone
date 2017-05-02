@@ -276,7 +276,7 @@ int main(int argc, char **argv){
   simple_vp_class *vp = new simple_vp_class; 
 
   ros::Duration(5.0).sleep(); // sleep a little 
-  ros::Rate rate(50.0);
+  ros::Rate rate(10.0);
   vp->getcyrcleparam();
   
   //basic view planner#
@@ -354,6 +354,7 @@ int main(int argc, char **argv){
         pose.pose.position.z = vp->setpoint_z;// getzparam();
 
         ros::spinOnce();
+        rate.sleep();
         vp->publish_vp(vp->vp_vec_all);
 
         
