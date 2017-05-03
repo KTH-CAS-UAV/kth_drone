@@ -3,6 +3,7 @@
 
 
 #include <geometry_msgs/PoseStamped.h>
+#include <geometry_msgs/Pose.h>
 #include <math.h>
 #include <cmath>
 #include <tf/transform_datatypes.h>
@@ -31,6 +32,7 @@ class auto_teleop_class
         sub_targetPoint = node.subscribe("/mavros/setpoint_position/local", 1, &auto_teleop_class::targetPointCallback, this);
         sub_droneposPoint =node.subscribe("/mavros/local_position/pose", 1, &auto_teleop_class::droneposPointCallback, this);
         pub_teleop = node.advertise<std_msgs::String>("/teleop/keyinput", 1000);
+        pub_goal_point = node.advertise<geometry_msgs::PoseStamped>("/goal", 1);
 
 
     }
@@ -63,7 +65,7 @@ class auto_teleop_class
 
 
 ros::Publisher pub_teleop;
-
+ros::Publisher pub_goal_point;
   private:
     ros::NodeHandle node;
     ros::Subscriber sub_targetPoint;
@@ -119,14 +121,18 @@ int main(int argc, char **argv)
   bool helpflag=false;
   bool timestarted=false;
   ros::Time start_time;
-
+/*
   while(at->targetPoint.pose.position.z==0)
   {
     ROS_INFO_THROTTLE(1 , "Waiting for target");
     ros::spinOnce();
     loop_rate.sleep();
   }
+*/
 
+//set frame id for target (for visualsation only)
+
+  at->targetPoint.header.frame_id="world";
   while (ros::ok())
   {
 
@@ -181,6 +187,10 @@ int main(int argc, char **argv)
       at->pub_teleop.publish(msg);      
       helpflag=true;
     }
+
+
+   //publish goal as pose
+   at->pub_goal_point.publish(at->targetPoint);
 
     ros::spinOnce();
     //ROS_INFO_STREAM(" errorx: " << errorx);
