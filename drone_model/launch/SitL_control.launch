@@ -5,9 +5,9 @@
 
       <!-- simple vp node controll node -->
 		<node name="simple_vp" pkg="simple_vp" type="simple_vp" output="screen" >
-	      <param name="vp_radius" type="double" value="0.70" />
-		  <param name="num_vp" type="double" value="10.0" />
-		  <param name="vp_z" type="double" value="1.6" />
+	      <param name="vp_radius" type="double" value="0.8" />
+		  <param name="num_vp" type="double" value="20" />
+		  <!--param name="vp_z" type="double" value="1.6" /-->
 		</node>
 
 	  <!-- auto teleop controll node -->
