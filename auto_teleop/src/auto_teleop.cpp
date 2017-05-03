@@ -121,17 +121,16 @@ int main(int argc, char **argv)
   bool helpflag=false;
   bool timestarted=false;
   ros::Time start_time;
-/*
+
   while(at->targetPoint.pose.position.z==0)
   {
     ROS_INFO_THROTTLE(1 , "Waiting for target");
     ros::spinOnce();
     loop_rate.sleep();
   }
-*/
 
-//set frame id for target (for visualsation only)
 
+  //set frame id for target (for visualsation only)
   at->targetPoint.header.frame_id="world";
   while (ros::ok())
   {
