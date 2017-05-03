@@ -119,6 +119,14 @@ int main(int argc, char **argv)
   bool helpflag=false;
   bool timestarted=false;
   ros::Time start_time;
+
+  while(at->targetPoint.pose.position.z==0)
+  {
+    ROS_INFO_THROTTLE(1 , "Waiting for target");
+    ros::spinOnce();
+    loop_rate.sleep();
+  }
+
   while (ros::ok())
   {
 
@@ -157,7 +165,7 @@ int main(int argc, char **argv)
     }
 
     //check if in perfec pos
-    if(errorx<at->tol_xy/5 && errory< at->tol_xy/5 && errorz < at->tol_xy && erroryaw < at->tol_yaw/5)
+    if(errorx<at->tol_xy/5 && errory< at->tol_xy/5 && errorz < at->tol_xy/5 && erroryaw < at->tol_yaw/5)
     {
       atperfectpos=true;
     }
