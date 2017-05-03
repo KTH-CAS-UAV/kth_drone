@@ -58,7 +58,7 @@ class simple_vp_class
     ros::ServiceClient set_mode_client;
 
 
-    simple_vp_class():circleflag(false),view_point_number(6)
+    simple_vp_class():circleflag(false),view_point_number(0)
     {
 
       // sub
