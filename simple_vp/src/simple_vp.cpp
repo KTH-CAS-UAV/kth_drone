@@ -58,7 +58,7 @@ class simple_vp_class
     ros::ServiceClient set_mode_client;
 
 
-    simple_vp_class():circleflag(false),view_point_number(10)
+    simple_vp_class():circleflag(false),view_point_number(6)
     {
 
       // sub
@@ -146,6 +146,7 @@ class simple_vp_class
           // store points in verctor
 
           geometry_msgs::PoseStamped temp_vp;
+          std::vector<geometry_msgs::PoseStamped> temp_vp_to_sort;
           double temp_angle;
             for(int i=0;i<num_vp;i++){
               temp_angle=angle*i;
@@ -154,9 +155,20 @@ class simple_vp_class
               temp_vp.pose.position.z=(tp.getZ());
               temp_vp.pose.orientation = tf::createQuaternionMsgFromYaw(temp_angle+M_PI);
               //temp_vp.pose.orientation.z=temp_angle;
-              vp_vec_all.push_back(temp_vp);
+              temp_vp_to_sort.push_back(temp_vp);
             } 
           circleflag=true;
+
+          //sort waypoints
+          int j=0;
+          for(int i=0;i<num_vp;i++){
+            vp_vec_all.push_back(temp_vp_to_sort[j]);
+            j=j+2;
+            if (j>=num_vp){
+              j=1;
+            }
+          }
+
         }
       catch (tf::TransformException ex){
         ROS_ERROR("%s",ex.what());
