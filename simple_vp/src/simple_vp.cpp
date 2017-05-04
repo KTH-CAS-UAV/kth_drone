@@ -3,6 +3,7 @@
 
 #include <nav_msgs/OccupancyGrid.h>
 #include <ros/console.h>
+#include <geometry_msgs/PoseStamped.h>
 
 //TF stuff
 #include <tf/transform_datatypes.h>
@@ -51,6 +52,8 @@ class simple_vp_class
     double num_viepoints;
     double setpoint_z;
 
+    geometry_msgs::PoseStamped dronepos;
+
       //drone mavros com
     ros::Subscriber state_sub;
     ros::Publisher local_pos_pub;
@@ -58,13 +61,14 @@ class simple_vp_class
     ros::ServiceClient set_mode_client;
 
 
-    simple_vp_class():circleflag(false),view_point_number(0)
+    simple_vp_class():circleflag(false)
     {
 
       // sub
-      vp_pub = node.advertise<geometry_msgs::PoseArray>( "view_points", 0 );
+      vp_pub = node.advertise<geometry_msgs::PoseArray>( "view_points", 1 );
       sub_map = node.subscribe("/projected_map", 10, &simple_vp_class::map2DCallback, this);
-
+      sub_dronepos =node.subscribe("/mavros/local_position/pose", 1, &simple_vp_class::droneposCallback, this);
+        
       // drone mavros stuff
      state_sub = node.subscribe<mavros_msgs::State>
             ("mavros/state", 10, &simple_vp_class::state_cb, this);
@@ -266,6 +270,12 @@ class simple_vp_class
        
   } // end configCallback()
 
+  void droneposCallback(const geometry_msgs::PoseStamped::ConstPtr& msg)
+    {
+      dronepos.pose=msg->pose;
+      //ROS_INFO_STREAM("droneposPoint");
+    }
+
 
 
   private:   
@@ -277,6 +287,7 @@ class simple_vp_class
   ros::Subscriber subgazebo;
   ros::Publisher pubgazebo;
   ros::Publisher vp_pub;  
+  ros::Subscriber sub_dronepos;
 };
 
 
@@ -321,9 +332,10 @@ int main(int argc, char **argv){
     // use parameter to set number of view points and radius
     vp->circular_vp("/target",(double)vp->viewpoint_radius,(double)vp->num_viepoints);
     //vp.circular_vp("/target",1.0,10.0);
-    
     rate.sleep();
   }
+
+  
  
 
   //conect drone
@@ -337,6 +349,7 @@ int main(int argc, char **argv){
 
     //TODO: read in current pose and add onlz Z!!!
     geometry_msgs::PoseStamped pose;
+    pose.header.frame_id="world";
     pose.pose.position.x = 0;
     pose.pose.position.y = 0;
     pose.pose.position.z = 1.2;
@@ -358,7 +371,37 @@ int main(int argc, char **argv){
     mavros_msgs::CommandBool arm_cmd;
     arm_cmd.request.value = true;
 
-    ros::Time last_request = ros::Time::now();     
+    ros::Time last_request = ros::Time::now();
+
+    //select nearest waypoint
+  
+  bool foundnearestpoint=false;
+  double error=std::numeric_limits<double>::max();
+  double preerror=error;
+  double minerror=std::numeric_limits<double>::max();
+
+  while(!foundnearestpoint){    
+      for(int i=0;i<vp->num_viepoints;i++){        
+        error=fabs(vp->vp_vec_all[i].pose.position.x-vp->dronepos.pose.position.x) + fabs(vp->vp_vec_all[i].pose.position.y-vp->dronepos.pose.position.y) + fabs(vp->vp_vec_all[i].pose.position.z-vp->dronepos.pose.position.z); 
+        //ROS_INFO("dronepos x: %f , vp pos: %f",vp->dronepos.pose.position.x,vp->vp_vec_all[i].pose.position.x);
+        if(error<preerror){
+          preerror=error;
+          vp->view_point_number=i;          
+          minerror=preerror-error;
+        }
+      }
+      
+      if(minerror<10){
+        foundnearestpoint=true;
+        ROS_INFO("Starting with point number: %i",vp->view_point_number);
+      }
+      else{
+        ROS_INFO("No start point found. Error to big:  %f",minerror);
+      }
+      
+    ros::spinOnce();
+    rate.sleep();
+  }
 
     while(ros::ok() ){
         pose=vp->vp_vec_all[vp->view_point_number];
