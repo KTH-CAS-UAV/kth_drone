@@ -27,6 +27,10 @@
 	<node pkg="tf" type="static_transform_publisher" name="tf_world_target" args="0.0 0 0.65 0 0 0 world target 10" />
 	<node pkg="tf" type="static_transform_publisher" name="tf_world_slam_origin" args="0 0 0 0 0 0 world slam_origin 20" />
 
+    <!-- map cloud node --> 
+      <node name="map_as_pointcloude" pkg="map_as_pointcloude" type="map_as_pointcloude"/>
+		
+
 	<arg name="machine_name" default="$(optenv HOSTNAME localhost)"/>
 	<group ns="$(arg machine_name)">
 		<node name="cpu_monitor_$(arg machine_name)" pkg="system_monitor"
@@ -66,6 +70,8 @@
 	
 	  <!-- data source to integrate (PointCloud2) -->
 	    <remap from="cloud_in" to="/camera/depth/points" />
+            <remap from="cloud_in" to="/map/cage_cloud" />
+
 
 	  </node>
 
