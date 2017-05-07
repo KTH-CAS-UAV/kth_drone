@@ -237,7 +237,7 @@ class auto_vp_class
       }
       else
       {
-        ROS_WARN_THROTTLE(1, "Failed to get param '/simple_vp/vp_radius'");
+        ROS_WARN_THROTTLE(1, "Failed to get param '/object_hight'");
         //object_hight=0.2;
         got_params=false;
       }
@@ -250,7 +250,7 @@ class auto_vp_class
       }
       else
       {
-        ROS_WARN_THROTTLE(1, "Failed to get param '/simple_vp/object_radius'");
+        ROS_WARN_THROTTLE(1, "Failed to get param '/object_radius'");
         //num_viepoints=20;
         got_params=false;
       }
