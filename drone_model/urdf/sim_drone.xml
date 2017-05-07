@@ -25,19 +25,22 @@
 	</material>
     </visual>
   </link>
+
   <joint name="drone_base_to_d_camera" type="fixed">
     <parent link="drone_base"/>
     <child link="d_camera"/>
-    <origin rpy="0 0.7 0" xyz="0.12 0.0 0.05"/>
+    <origin rpy="0.026 0.649 0.014" xyz="0.193 0.082 -0.256"/>
   </joint>
 
+<!--
   <link name="d_camera::camera_link"/>
   <joint name="d_camera_to_camera_link" type="fixed">
     <parent link="d_camera"/>
     <child link="d_camera::camera_link"/>
-    <!--origin rpy="0 0 0" xyz="0.0 0.0 0.0"/-->
+    <origin rpy="0 0 0" xyz="0.0 0.0 0.0"/>
     <origin rpy="-1.57 0 -1.57" xyz="0.0 0.0 0.0"/>
   </joint>
+-->
 
 
 
