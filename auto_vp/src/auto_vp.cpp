@@ -66,7 +66,7 @@ class auto_vp_class
     ros::ServiceClient set_mode_client;
 
 
-    auto_vp_class():circleflag(false),got_params(false),cam_alpha(80.0*M_PI/180.0),cam_tau(0.7),cam_beta(5.0*M_PI/180.0),cam_gamma(18.0)
+    auto_vp_class():circleflag(false),got_params(false),cam_alpha(70.0*M_PI/180.0),cam_tau(0.64),cam_beta(10.0*M_PI/180.0),cam_gamma(18.0)
     {
 
 
@@ -164,7 +164,7 @@ class auto_vp_class
           help_tan_p=tan(cam_tau+(cam_alpha/2)-cam_beta);
           vp_z=((2*cyl_r+cyl_h/help_tan_m)*(help_tan_m*help_tan_p))/(help_tan_p- help_tan_m)+tp.getZ();
           vp_r=(vp_z/help_tan_p)+cyl_r;
-
+          ROS_INFO("vp r> %f",vp_r);
           double angle = 2*M_PI/num_viepoints;
 
           // generatepoints vp around target given radius and num_vp
@@ -229,7 +229,7 @@ class auto_vp_class
     void getcyrcleparam(){
       //check if param are ther else use defult of 0.75 and 10
       double d;
-      if (node.getParam("/object_hight", d))
+      if (node.getParam("/object_height", d))
       {
         ROS_INFO_THROTTLE(1 , "Got param: %f", d);
         object_h= d;
@@ -382,6 +382,9 @@ int main(int argc, char **argv){
     ros::spinOnce();
     rate.sleep();
   }
+
+  ros::Duration(5.0).sleep();
+
 
     while(ros::ok() ){
         pose=vp->vp_vec_all[vp->view_point_number];
