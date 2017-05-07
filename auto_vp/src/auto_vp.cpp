@@ -37,12 +37,14 @@ class auto_vp_class
   public:
 
     bool circleflag;   
+    bool got_params;
     std::vector<tf::Vector3> vp_vec_reachable;
     std::vector<geometry_msgs::PoseStamped> vp_vec_all;
     mavros_msgs::State current_state;
     int view_point_number;
 
-    double viewpoint_radius;
+    double object_h;
+    double object_r;
     int num_viepoints;
     double setpoint_z;
 
@@ -64,8 +66,9 @@ class auto_vp_class
     ros::ServiceClient set_mode_client;
 
 
-    auto_vp_class():circleflag(false),cam_alpha(80.0*M_PI/180.0),cam_tau(0.7),cam_beta(5.0*M_PI/180.0),cam_gamma(18.0)
+    auto_vp_class():circleflag(false),got_params(false),cam_alpha(80.0*M_PI/180.0),cam_tau(0.7),cam_beta(5.0*M_PI/180.0),cam_gamma(18.0)
     {
+
 
       // sub
       vp_pub = node.advertise<geometry_msgs::PoseArray>( "view_points", 1 );
@@ -223,6 +226,38 @@ class auto_vp_class
 
     }
 
+    void getcyrcleparam(){
+      //check if param are ther else use defult of 0.75 and 10
+      double d;
+      if (node.getParam("/object_hight", d))
+      {
+        ROS_INFO_THROTTLE(1 , "Got param: %f", d);
+        object_h= d;
+        got_params=true;
+      }
+      else
+      {
+        ROS_WARN_THROTTLE(1, "Failed to get param '/simple_vp/vp_radius'");
+        //object_hight=0.2;
+        got_params=false;
+      }
+
+      if (node.getParam("/object_radius", d))
+      {
+        ROS_INFO_THROTTLE(1, "Got param: %f", d);
+        object_r= d;
+        got_params=true;
+      }
+      else
+      {
+        ROS_WARN_THROTTLE(1, "Failed to get param '/simple_vp/object_radius'");
+        //num_viepoints=20;
+        got_params=false;
+      }
+
+
+    }
+
    
 
 
@@ -265,21 +300,27 @@ int main(int argc, char **argv){
   4. send list ready to execute
 
   */
-  
+ ROS_INFO("Starting");
+  while(!vp->got_params)
+  {
+    vp->getcyrcleparam();
+    rate.sleep();
+  }
+  ROS_INFO("Got Parameters");
   
   while(!vp->circleflag){
 
     // use parameter to set number of view points and radius
-    vp->circular_vp("/target",0.2,0.2); // target cyl_r,cyl_h
+    vp->circular_vp("/target",vp->object_r,vp->object_h); // target cyl_r,cyl_h
     //vp.circular_vp("/target",1.0,10.0);
     rate.sleep();
   }
 
   
- 
+ ROS_INFO("Got view_points");
 
   //conect drone
-  ROS_INFO("Starting");
+  
      // wait for FCU connection
     while(ros::ok() && vp->current_state.connected){
         ros::spinOnce();
