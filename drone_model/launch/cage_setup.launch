@@ -43,4 +43,30 @@
 		<rosparam command="load" file="$(find system_monitor)/config/system_monitor.yaml"/>
 	</group>
 
+
+
+<!-- Octomap Server -->
+      <node pkg="octomap_server" type="octomap_server_node" name="octomap_server">
+	    <param name="resolution" value="0.1" />
+
+	  <!-- fixed map frame (set to 'map' if SLAM or localization running!) -->
+	    <param name="frame_id" type="string" value="/world" />
+
+	  <!-- maximum range to integrate (speedup!) -->
+	    <param name="max_sensor_range" value="5.0" />
+
+	  <!-- publish free space -->
+	    <param name="publish_free_space" value="true" />
+
+	  <!-- get rid of ground plane with NO filter-->
+	    <param name="occupancy_min_z" value="0.2"/>
+	    <param name="occupancy_max_z" value="2.8"/>
+
+	    <param name="latch" value="false" />
+	
+	  <!-- data source to integrate (PointCloud2) -->
+	    <remap from="cloud_in" to="/camera/depth/points" />
+
+	  </node>
+
 </launch>
