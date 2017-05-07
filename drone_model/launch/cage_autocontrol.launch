@@ -1,0 +1,9 @@
+<launch>
+  <!-- Controll nodes-->   
+      <!-- auto vp node controll node -->
+		<node name="auto_vp" pkg="auto_vp" type="auto_vp" output="screen"/>	      
+
+	  <!-- auto teleop controll node -->
+		<node name="auto_teleop" pkg="auto_teleop" type="auto_teleop" output="screen" />
+
+</launch>

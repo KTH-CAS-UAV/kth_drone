@@ -26,7 +26,7 @@
 		</node>
 
 	<!-- map cloud node --> 
-		<!--node name="map_as_pointcloude" pkg="map_as_pointcloude" type="map_as_pointcloude"/-->
+		<node name="map_as_pointcloude" pkg="map_as_pointcloude" type="map_as_pointcloude"/>
 		
 		<!-- rely map cloud to camera depth for octo-->
 		  <!--node name="relay" pkg="topic_tools" type="relay" args="/map/cage_cloud /camera/depth/points "/-->
@@ -52,6 +52,7 @@
 	
 	  <!-- data source to integrate (PointCloud2) -->
 	    <remap from="cloud_in" to="/camera/depth/points" />
+            <remap from="cloud_in" to="/map/cage_cloud" />
 
 	  </node>
 	
