@@ -22,6 +22,7 @@
 //teleop
 #include "std_msgs/String.h"
 #include <string>
+#include <std_msgs/Int8.h>
 
 // mavros stuff
 #include <mavros_msgs/CommandBool.h>
@@ -38,8 +39,10 @@ class auto_vp_class
 
     bool circleflag;   
     bool got_params;
+    bool landing;
     std::vector<tf::Vector3> vp_vec_reachable;
     std::vector<geometry_msgs::PoseStamped> vp_vec_all;
+    std::vector<geometry_msgs::PoseStamped> vp_vec_good;
     mavros_msgs::State current_state;
     int view_point_number;
 
@@ -66,7 +69,7 @@ class auto_vp_class
     ros::ServiceClient set_mode_client;
 
 
-    auto_vp_class():circleflag(false),got_params(false),cam_alpha(70.0*M_PI/180.0),cam_tau(0.64),cam_beta(10.0*M_PI/180.0),cam_gamma(18.0)
+    auto_vp_class():landing(false),circleflag(false),got_params(false),cam_alpha(45.0*M_PI/180.0),cam_tau(0.64),cam_beta(10.0*M_PI/180.0),cam_gamma(18.0)
     {
 
 
@@ -112,23 +115,27 @@ class auto_vp_class
 
       std::string strinput =msg->data.c_str();
       
-      if(strinput=="n" || strinput=="p"){
+      if(strinput=="n"){
         view_point_number=view_point_number+1;
-          if(view_point_number>=vp_vec_all.size())
+          if(view_point_number>=vp_vec_good.size())
             view_point_number=0;
 
-          ROS_INFO("Next View point");
+          ROS_INFO("Next View point: %i",view_point_number);
       }
       if (strinput=="b"){
             view_point_number=view_point_number-1;
           if(view_point_number<0)
-            view_point_number=vp_vec_all.size();
+            view_point_number=vp_vec_good.size()-1;
 
-          ROS_INFO("previous View point");
+          ROS_INFO("previous View point: %i",view_point_number);
         }
         if (strinput=="f"){
  
           ROS_INFO("Unknown command");
+        }
+        if (strinput=="l"){
+          landing=true;
+          ROS_INFO("Landing initilized");
         }
 
     }
@@ -162,7 +169,7 @@ class auto_vp_class
           double help_tan_p;
           help_tan_m=tan(cam_tau-(cam_alpha/2)+cam_beta);
           help_tan_p=tan(cam_tau+(cam_alpha/2)-cam_beta);
-          vp_z=((2*cyl_r+cyl_h/help_tan_m)*(help_tan_m*help_tan_p))/(help_tan_p- help_tan_m)+tp.getZ();
+          vp_z=((2*cyl_r+cyl_h/help_tan_m)*(help_tan_m*help_tan_p))/(help_tan_p- help_tan_m);
           vp_r=(vp_z/help_tan_p)+cyl_r;
           ROS_INFO("vp r> %f",vp_r);
           double angle = 2*M_PI/num_viepoints;
@@ -176,7 +183,7 @@ class auto_vp_class
               temp_angle=angle*i;
               temp_vp.pose.position.x=(tp.getX()+vp_r*cos(temp_angle));
               temp_vp.pose.position.y=(tp.getY()+vp_r*sin(temp_angle));
-              temp_vp.pose.position.z=vp_z;
+              temp_vp.pose.position.z=vp_z+tp.getZ();
               temp_vp.pose.orientation = tf::createQuaternionMsgFromYaw(temp_angle+M_PI);
               //temp_vp.pose.orientation.z=temp_angle;
               vp_vec_all.push_back(temp_vp);
@@ -191,10 +198,59 @@ class auto_vp_class
 
     }
 
-    void check_vp(std::vector<tf::Vector3> vp_vec_temp){
+    void check_vp(std::vector<geometry_msgs::PoseStamped> vp_vec_temp){
 
       //TODO::check if points are reachible or not using simple means (A* or similar)     
+      // simple check given 3x3 map with origan in the middle
+      int start_vp=vp_vec_temp.size();
+      std::vector<geometry_msgs::PoseStamped> vp_vec_sort;
+      for(int i=0; i<vp_vec_temp.size();i++){
+        //ROS_INFO("for loop %i",i);
+        // se if valid in cage
+        if(fabs(vp_vec_temp[i].pose.position.x) < 1.3 && fabs(vp_vec_temp[i].pose.position.y) < 1.3 && fabs(vp_vec_temp[i].pose.position.z) < 2.4){
+          vp_vec_sort.push_back(vp_vec_temp[i]);
+          ROS_INFO("valid");   
+        }
+        else
+        { 
+          ROS_INFO("rejected ");         
+        }
+      }
 
+      //find vp next to wall
+      double dis_vp;
+      double max_dis=0;
+      int j=0;
+      for(int i=0;i<vp_vec_sort.size();i++){
+        j=i+1;
+        if(j>=vp_vec_sort.size())
+          j=0;
+
+        dis_vp= fabs(vp_vec_sort[i].pose.position.x-vp_vec_sort[j].pose.position.x) + fabs(vp_vec_sort[i].pose.position.y-vp_vec_sort[j].pose.position.y) + fabs(vp_vec_sort[i].pose.position.z-vp_vec_sort[j].pose.position.z);
+        
+        if(dis_vp>max_dis)
+        {
+          max_dis=dis_vp;
+          start_vp=j;
+        }
+      }
+      ROS_INFO("start_vp %i",start_vp);
+      //sort the wayponts
+      int k=start_vp;
+      
+        for(int i=0; i< vp_vec_sort.size();i++){        
+        vp_vec_good.push_back(vp_vec_sort[k]);
+        k=k+1;
+        if (k<0)
+          k=vp_vec_sort.size()-1;
+        if(k>=vp_vec_sort.size())
+          k=0;
+        }
+
+      
+      
+
+      
 
     }
 
@@ -229,31 +285,41 @@ class auto_vp_class
     void getcyrcleparam(){
       //check if param are ther else use defult of 0.75 and 10
       double d;
+      bool got_para_h=false;
+      bool got_para_r=false;
       if (node.getParam("/object_height", d))
       {
         ROS_INFO_THROTTLE(1 , "Got param: %f", d);
         object_h= d;
-        got_params=true;
+        got_para_h=true;
       }
       else
       {
         ROS_WARN_THROTTLE(1, "Failed to get param '/object_hight'");
         //object_hight=0.2;
-        got_params=false;
+        got_para_h=false;
       }
 
       if (node.getParam("/object_radius", d))
       {
         ROS_INFO_THROTTLE(1, "Got param: %f", d);
         object_r= d;
-        got_params=true;
+        got_para_r=true;
       }
       else
       {
         ROS_WARN_THROTTLE(1, "Failed to get param '/object_radius'");
         //num_viepoints=20;
+        got_para_r=false;
+      }
+
+      if(got_para_r && got_para_h){
+        got_params=true;
+      }
+      else{
         got_params=false;
       }
+        
 
 
     }
@@ -266,7 +332,6 @@ class auto_vp_class
       dronepos.pose=msg->pose;
       //ROS_INFO_STREAM("droneposPoint");
     }
-
 
 
   private:   
@@ -319,6 +384,11 @@ int main(int argc, char **argv){
   
  ROS_INFO("Got view_points");
 
+ //check vp
+ vp->check_vp(vp->vp_vec_all);
+
+ ROS_INFO("Got view checked viepoints");
+
   //conect drone
   
      // wait for FCU connection
@@ -361,8 +431,8 @@ int main(int argc, char **argv){
   double preerror=error;
   double minerror=std::numeric_limits<double>::max();
   while(!foundnearestpoint){    
-      for(int i=0;i<vp->num_viepoints;i++){  
-        error=fabs(vp->vp_vec_all[i].pose.position.x-vp->dronepos.pose.position.x) + fabs(vp->vp_vec_all[i].pose.position.y-vp->dronepos.pose.position.y) + fabs(vp->vp_vec_all[i].pose.position.z-vp->dronepos.pose.position.z); 
+      for(int i=0;i<vp->vp_vec_good.size();i++){  
+        error=fabs(vp->vp_vec_good[i].pose.position.x-vp->dronepos.pose.position.x) + fabs(vp->vp_vec_good[i].pose.position.y-vp->dronepos.pose.position.y) + fabs(vp->vp_vec_good[i].pose.position.z-vp->dronepos.pose.position.z); 
         //ROS_INFO("dronepos x: %f , vp pos: %f",vp->dronepos.pose.position.x,vp->vp_vec_all[i].pose.position.x);
         if(error<preerror){
           preerror=error;
@@ -383,15 +453,22 @@ int main(int argc, char **argv){
     rate.sleep();
   }
 
-  ros::Duration(5.0).sleep();
+  //ros::Duration(5.0).sleep();
+
+  // set start vp and num of vp to param server for auto teleop2
+  int numofvp=vp->vp_vec_good.size();
+  ros::param::set("/teleop/num_vp",numofvp);
+  ros::param::set("/teleop/start_vp", vp->view_point_number);
 
 
-    while(ros::ok() ){
-        pose=vp->vp_vec_all[vp->view_point_number];
+
+    while(ros::ok() && !vp->landing){
+
+        pose=vp->vp_vec_good[vp->view_point_number];
        
         ros::spinOnce();
         rate.sleep();
-        vp->publish_vp(vp->vp_vec_all);
+        vp->publish_vp(vp->vp_vec_good);
 
         
         if( vp->current_state.mode != "OFFBOARD" &&
@@ -415,6 +492,8 @@ int main(int argc, char **argv){
         vp->local_pos_pub.publish(pose);
         
     }
+
+
   
   return 0;
 };
