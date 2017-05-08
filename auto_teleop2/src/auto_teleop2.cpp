@@ -294,7 +294,7 @@ int main(int argc, char **argv)
       if(direction){
         //check if stage 2 is complete
         
-         if(current_point==at->tele_num_vp-1 && helpcounter>0){
+         if(current_point>=at->tele_num_vp-1 && helpcounter>0){
           msg.data="n";        
           at->pub_snapshot.publish(msg);
           step2=true;
@@ -314,7 +314,7 @@ int main(int argc, char **argv)
       }
       if(!direction){
 
-         if(current_point==0 && helpcounter>0){
+         if(current_point<=0 && helpcounter>0){
           step2=true;
           msg.data="b";        
           at->pub_snapshot.publish(msg);
@@ -345,7 +345,7 @@ int main(int argc, char **argv)
     if(atperfectpos && !helpflag)
     {
       if(direction){
-        if(current_point==0 && helpcounter>0)
+        if(current_point>=at->tele_num_vp-1 && helpcounter>0)
         {
         step2=true;
         msg.data="n";        
@@ -364,7 +364,7 @@ int main(int argc, char **argv)
       }
       
       if(!direction){
-        if(current_point==0 && helpcounter>0)
+        if(current_point<=0 && helpcounter>0)
         {
         step2=true;
         msg.data="b";        
