@@ -26,12 +26,14 @@
 	<!-- launch tf tree -->
 	<include file="$(find drone_model)/launch/tf_tree.launch"/>
 
-<!--	<node pkg="tf" type="static_transform_publisher" name="tf_world_target" args="0.0 0 0.65 0 0 0 world target 10" /> -->
+
 	<node pkg="tf" type="static_transform_publisher" name="tf_mocap_camera" args="0.193 0.082 -0.256 0.026 0.649 0.014 mocap camera_link 10" />
 	<node pkg="tf" type="static_transform_publisher" name="tf_world_slam_origin" args="0 0 0 0 0 0 world slam_origin 20" />
 
     <!-- map cloud node --> 
       <node name="map_as_pointcloude" pkg="map_as_pointcloude" type="map_as_pointcloude"/>
+    <!-- remap camera for octomap with treottle-->
+      <node name="throttle" pkg="topic_tools" type="throttle" args="/camera/depth/points /map/cage_cloud 10" />
 		
 
 	<arg name="machine_name" default="$(optenv HOSTNAME localhost)"/>
@@ -72,7 +74,6 @@
 	    <param name="latch" value="false" />
 	
 	  <!-- data source to integrate (PointCloud2) -->
-	    <remap from="cloud_in" to="/camera/depth/points" />
             <remap from="cloud_in" to="/map/cage_cloud" />
 
 
