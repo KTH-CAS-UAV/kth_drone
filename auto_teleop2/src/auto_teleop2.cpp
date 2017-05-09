@@ -181,7 +181,7 @@ int main(int argc, char **argv)
   ROS_INFO_STREAM("starting stage 1");
   bool step1=false;
   double flyxyztol=0.3;
-  double flyyawtol=20;
+  double flyyawtol=50;
   bool atflypos=false;
   int current_point=at->tele_start_vp;
 
@@ -213,7 +213,7 @@ int main(int argc, char **argv)
       timestarted=true;
     }
 
-    if(ros::Time::now() - start_time > ros::Duration(1.0) && atposition==true)
+    if(ros::Time::now() - start_time > ros::Duration(0.5) && atposition==true)
     {
 
     //which way is shorter
@@ -422,7 +422,7 @@ int main(int argc, char **argv)
       timestarted=true;
     }
 
-    if(ros::Time::now() - start_time > ros::Duration(1.0) && atposition==true)
+    if(ros::Time::now() - start_time > ros::Duration(0.5) && atposition==true)
     {
 
     //which way is shorter

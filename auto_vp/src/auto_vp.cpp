@@ -171,7 +171,11 @@ class auto_vp_class
           help_tan_p=tan(cam_tau+(cam_alpha/2)-cam_beta);
           vp_z=((2*cyl_r+cyl_h/help_tan_m)*(help_tan_m*help_tan_p))/(help_tan_p- help_tan_m);
           vp_r=(vp_z/help_tan_p)+cyl_r;
-          ROS_INFO("vp r> %f",vp_r);
+          vp_z=vp_z+tp.getZ();
+          ROS_INFO("vp r: %f",vp_r);
+          if(vp_z>2.2)
+            vp_z=2.2;
+          ROS_INFO("vp_z: %f",vp_z);
           double angle = 2*M_PI/num_viepoints;
 
           // generatepoints vp around target given radius and num_vp
@@ -183,7 +187,7 @@ class auto_vp_class
               temp_angle=angle*i;
               temp_vp.pose.position.x=(tp.getX()+vp_r*cos(temp_angle));
               temp_vp.pose.position.y=(tp.getY()+vp_r*sin(temp_angle));
-              temp_vp.pose.position.z=vp_z+tp.getZ();
+              temp_vp.pose.position.z=vp_z;
               temp_vp.pose.orientation = tf::createQuaternionMsgFromYaw(temp_angle+M_PI);
               //temp_vp.pose.orientation.z=temp_angle;
               vp_vec_all.push_back(temp_vp);
@@ -207,7 +211,7 @@ class auto_vp_class
       for(int i=0; i<vp_vec_temp.size();i++){
         //ROS_INFO("for loop %i",i);
         // se if valid in cage
-        if(fabs(vp_vec_temp[i].pose.position.x) < 1.3 && fabs(vp_vec_temp[i].pose.position.y) < 1.3 && fabs(vp_vec_temp[i].pose.position.z) < 2.4){
+        if(fabs(vp_vec_temp[i].pose.position.x) < 1.0 && fabs(vp_vec_temp[i].pose.position.y) < 1.0 && fabs(vp_vec_temp[i].pose.position.z) < 2.4){
           vp_vec_sort.push_back(vp_vec_temp[i]);
           ROS_INFO("valid");   
         }

@@ -4,6 +4,6 @@
 		<node name="auto_vp" pkg="auto_vp" type="auto_vp" output="screen"/>	      
 
 	  <!-- auto teleop controll node -->
-		<node name="auto_teleop" pkg="auto_teleop" type="auto_teleop" output="screen" />
+		<node name="auto_teleop2" pkg="auto_teleop2" type="auto_teleop2" output="screen" />
 
 </launch>

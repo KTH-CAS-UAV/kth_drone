@@ -33,7 +33,7 @@
     <!-- map cloud node --> 
       <node name="map_as_pointcloude" pkg="map_as_pointcloude" type="map_as_pointcloude"/>
     <!-- remap camera for octomap with treottle-->
-      <node name="throttle" pkg="topic_tools" type="throttle" args="/camera/depth/points /map/cage_cloud 10" />
+      <!--node name="relay" pkg="topic_tools" type="relay" args="/camera/depth/points /map/cage_cloud"/-->
 		
 
 	<arg name="machine_name" default="$(optenv HOSTNAME localhost)"/>
