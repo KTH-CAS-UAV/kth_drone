@@ -206,7 +206,8 @@ class auto_vp_class
 
       //TODO::check if points are reachible or not using simple means (A* or similar)     
       // simple check given 3x3 map with origan in the middle
-      int start_vp=vp_vec_temp.size();
+      int start_vp=0;
+      bool rejected=false;
       std::vector<geometry_msgs::PoseStamped> vp_vec_sort;
       for(int i=0; i<vp_vec_temp.size();i++){
         //ROS_INFO("for loop %i",i);
@@ -217,7 +218,8 @@ class auto_vp_class
         }
         else
         { 
-          ROS_INFO("rejected ");         
+          ROS_INFO("rejected ");   
+          rejected=true;      
         }
       }
 
@@ -225,18 +227,25 @@ class auto_vp_class
       double dis_vp;
       double max_dis=0;
       int j=0;
-      for(int i=0;i<vp_vec_sort.size();i++){
-        j=i+1;
-        if(j>=vp_vec_sort.size())
-          j=0;
+      if(rejected)
+      {
+        for(int i=0;i<vp_vec_sort.size();i++){
+          j=i+1;
+          if(j>=vp_vec_sort.size())
+            j=0;
 
-        dis_vp= fabs(vp_vec_sort[i].pose.position.x-vp_vec_sort[j].pose.position.x) + fabs(vp_vec_sort[i].pose.position.y-vp_vec_sort[j].pose.position.y) + fabs(vp_vec_sort[i].pose.position.z-vp_vec_sort[j].pose.position.z);
-        
-        if(dis_vp>max_dis)
-        {
-          max_dis=dis_vp;
-          start_vp=j;
+          dis_vp= fabs(vp_vec_sort[i].pose.position.x-vp_vec_sort[j].pose.position.x) + fabs(vp_vec_sort[i].pose.position.y-vp_vec_sort[j].pose.position.y) + fabs(vp_vec_sort[i].pose.position.z-vp_vec_sort[j].pose.position.z);
+          
+          if(dis_vp>max_dis)
+          {
+            max_dis=dis_vp;
+            start_vp=j;
+          }
         }
+      }
+      else
+      {
+        start_vp=0;
       }
       ROS_INFO("start_vp %i",start_vp);
       //sort the wayponts

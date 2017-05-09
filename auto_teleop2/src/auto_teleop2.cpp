@@ -121,7 +121,7 @@ double distance(double alpha, double beta) {
 int main(int argc, char **argv)
 {
   
-  ros::init(argc, argv, "auto_teleop");
+  ros::init(argc, argv, "auto_teleop2");
 
   auto_teleop_class *at = new auto_teleop_class;
   
