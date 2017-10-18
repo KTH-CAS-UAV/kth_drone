@@ -40,6 +40,7 @@ class auto_vp_class
     bool circleflag;   
     bool got_params;
     bool landing;
+    bool fullcycle;
     std::vector<tf::Vector3> vp_vec_reachable;
     std::vector<geometry_msgs::PoseStamped> vp_vec_all;
     std::vector<geometry_msgs::PoseStamped> vp_vec_good;
@@ -69,7 +70,7 @@ class auto_vp_class
     ros::ServiceClient set_mode_client;
 
 
-    auto_vp_class():landing(false),circleflag(false),got_params(false),cam_alpha(45.0*M_PI/180.0),cam_tau(0.64),cam_beta(10.0*M_PI/180.0),cam_gamma(18.0)
+    auto_vp_class():fullcycle(true),landing(false),circleflag(false),got_params(false),cam_alpha(45.0*M_PI/180.0),cam_tau(0.64),cam_beta(10.0*M_PI/180.0),cam_gamma(18.0)
     {
 
 
@@ -207,7 +208,7 @@ class auto_vp_class
       //TODO::check if points are reachible or not using simple means (A* or similar)     
       // simple check given 3x3 map with origan in the middle
       int start_vp=0;
-      bool rejected=false;
+      bool rejected=true;
       std::vector<geometry_msgs::PoseStamped> vp_vec_sort;
       for(int i=0; i<vp_vec_temp.size();i++){
         //ROS_INFO("for loop %i",i);
@@ -219,7 +220,7 @@ class auto_vp_class
         else
         { 
           ROS_INFO("rejected ");   
-          rejected=true;      
+          fullcycle=false;      
         }
       }
 
@@ -471,6 +472,7 @@ int main(int argc, char **argv){
   // set start vp and num of vp to param server for auto teleop2
   int numofvp=vp->vp_vec_good.size();
   ros::param::set("/teleop/num_vp",numofvp);
+  
   ros::param::set("/teleop/start_vp", vp->view_point_number);
 
 
