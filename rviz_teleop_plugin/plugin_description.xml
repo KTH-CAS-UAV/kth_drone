@@ -1,0 +1,9 @@
+<library path="lib/librviz_teleop_plugin">
+  <class name="rviz_teleop_plugin/Teleop"
+         type="rviz_teleop_plugin::TeleopPanel"
+         base_class_type="rviz::Panel">
+    <description>
+      A panel widget allowing simple drone style robot to fly.
+    </description>
+  </class>  
+</library>
