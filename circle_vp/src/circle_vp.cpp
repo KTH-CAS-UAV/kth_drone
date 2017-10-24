@@ -54,6 +54,8 @@ class circle_view_points
   public:
     bool got_params;
     std::vector<geometry_msgs::PoseStamped> circular_view_points;
+    std::vector<float> a_target;
+    std::vector<float> size;
     //target spezifications
     double object_h;
     double object_r;
@@ -89,6 +91,9 @@ class circle_view_points
     //Send the gameboard *******
     circle_vp::circular_view_pointsGoal goal;
     goal.circular_view_points = circular_view_points;
+    std::cout << "***********" << a_target.size() << std::endl;
+    goal.target =a_target;
+    goal.size=size;
     // Need boost::bind to pass in the 'this' pointer
     ac_circle_vp.sendGoal(goal,
                 boost::bind(&circle_view_points::confirmation_circular_view_points, this, _1, _2),
@@ -113,9 +118,18 @@ class circle_view_points
         listener.lookupTransform("/world", target, ros::Time(0), transform);
 
         circular_view_points.clear();
+        a_target.clear();
+        size.clear();
 
         tf::Vector3 tp(transform.getOrigin().x(),transform.getOrigin().y(),transform.getOrigin().z()); // target point 3D
           
+        a_target.push_back(tp.getX());
+        a_target.push_back(tp.getY());
+        a_target.push_back(tp.getZ());
+        size.push_back(object_r);
+        size.push_back(object_h);
+        size.push_back(0.5);
+
         //calc Z
         double vp_z;
         double vp_r;
@@ -135,6 +149,8 @@ class circle_view_points
           // generatepoints vp around target given radius and num_vp
           // store points in verctor
         geometry_msgs::PoseStamped temp_vp;
+        
+        temp_vp.header.frame_id = "/world";
         double temp_angle;
         for(int i=0;i<view_point_number;i++){
           temp_angle=angle*i;
@@ -142,6 +158,7 @@ class circle_view_points
           temp_vp.pose.position.y=(tp.getY()+vp_r*sin(temp_angle));
           temp_vp.pose.position.z=vp_z;
           temp_vp.pose.orientation = tf::createQuaternionMsgFromYaw(temp_angle+M_PI);
+          temp_vp.header.stamp = ros::Time::now();
           circular_view_points.push_back(temp_vp);
         }        
       }
@@ -209,7 +226,7 @@ class circle_view_points
       if (nh_.getParam("/cam_alpha", d))
       {
         ROS_INFO_THROTTLE(1, "Got param /cam_alpha : %f", d);
-        cam_alpha= d;
+        cam_alpha= d*M_PI/180;
         got_para_alpha=true;
       }
       else
@@ -223,7 +240,7 @@ class circle_view_points
       if (nh_.getParam("/cam_beta", d))
       {
         ROS_INFO_THROTTLE(1, "Got param /cam_beta : %f", d);
-        cam_beta= d;
+        cam_beta= d*M_PI/180;
         got_para_beta=true;
       }
       else
@@ -237,7 +254,7 @@ class circle_view_points
       if (nh_.getParam("/cam_tau", d))
       {
         ROS_INFO_THROTTLE(1, "Got param /cam_tau : %f", d);
-        cam_tau= d;
+        cam_tau= d*M_PI/180;
         got_para_tau=true;
       }
       else
@@ -273,16 +290,14 @@ class circle_view_points
 
     }
 
-
 };
 
 int main(int argc, char **argv){
 
-
-
   
   ros::init(argc, argv, "circular_vp"); 
-  ros::Rate rate(10.0);
+
+  //ros::Rate rate(10.0);
 
   circle_view_points cvp;
 
@@ -310,7 +325,7 @@ int main(int argc, char **argv){
   while(ros::ok() && !cvp.send_vp_succesfull)
   {
     ros::Duration(1.0).sleep(); // sleep a little 
-    ROS_INFO("Waiting for confirmation");
+    ROS_INFO_THROTTLE(5,"Waiting for confirmation");
   }
 
   ros::shutdown();

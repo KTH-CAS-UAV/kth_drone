@@ -13,6 +13,9 @@ set(PACKAGE_DEPENDENCIES
   tf_conversions
   eigen_conversions
   visualization_msgs
+  actionlib
+  actionlib_msgs
+  message_generation
 )
 
 find_package(catkin REQUIRED COMPONENTS cmake_modules ${PACKAGE_DEPENDENCIES} message_generation)
@@ -26,6 +29,8 @@ find_package(Eigen REQUIRED)
 
 find_package(PCL REQUIRED)
 
+find_package(Boost REQUIRED COMPONENTS system)
+
 find_package(Boost REQUIRED COMPONENTS filesystem)
 
 include_directories(
@@ -37,6 +42,18 @@ include_directories(
   ${Boost_INCLUDE_DIRS}
 )
 
+################################################
+## Declare ROS messages, services and actions ##
+################################################
+
+## Generate actions in the 'action' folder
+ add_action_files(FILES 
+   circular_view_points.action
+   cloud_snapshoot.action
+   setpoint_control_commands.action
+ )
+
+
 add_service_files(
   FILES
   SetTarget.srv
@@ -44,13 +61,13 @@ add_service_files(
   SetViews.srv
   Update.srv
 )
-generate_messages( DEPENDENCIES std_msgs geometry_msgs sensor_msgs)
+generate_messages( DEPENDENCIES actionlib_msgs std_msgs geometry_msgs sensor_msgs tf)
 
 catkin_package(
         INCLUDE_DIRS include
         LIBRARIES ${PROJECT_NAME}
         CATKIN_DEPENDS ${PACKAGE_DEPENDENCIES} message_runtime
-        DEPENDS octomap eigen 
+        DEPENDS octomap eigen actionlib_msgs
 )
 
 set(LINK_LIBS
@@ -73,6 +90,12 @@ target_link_libraries(nbv_server ${PROJECT_NAME} ${LINK_LIBS})
 
 add_executable(nbv_drone src/nbv_planner_drone.cpp )
 target_link_libraries(nbv_drone ${PROJECT_NAME} ${LINK_LIBS} yaml-cpp )
+
+add_dependencies(
+  nbv_drone ${PROJECT_NAME}
+  ${circle_vp_EXPORTED_TARGETS}
+)
+add_dependencies(nbv_drone ${PROJECT_NAME} ${catkin_EXPORTED_TARGETS})
 
 add_executable(nbv_pcds src/nbv_planner_pcds.cpp )
 target_link_libraries(nbv_pcds ${PROJECT_NAME} ${LINK_LIBS} yaml-cpp )

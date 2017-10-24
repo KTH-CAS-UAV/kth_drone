@@ -1,0 +1,49 @@
+<launch>
+  <!-- defult launch script for KTH/CSC px4 simulation -->
+  
+  <!--gazebo-->
+    <include file="$(find px4)/launch/posix_sitl.launch">
+      <arg name="vehicle" value="iris_cam" />	
+      <arg name="world" value="$(find uav_model)../../gazebo-assets/worlds/cage.world" />	
+      <arg name="gui" value="true" />		
+      <arg name="z" value="0.02" />			
+    </include>
+
+  <!--rviz -->
+    <node name="visualisation" pkg="rviz" type="rviz" output="screen" />
+
+  <!-- mavros px4 -->
+    <include file="$(find mavros)/launch/px4.launch">
+      <arg name="fcu_url" value="udp://:14540@127.0.0.1:14557" />				
+    </include>
+
+  <!-- robo state publisher + tf -->
+    <include file="$(find uav_model)/launch/state_publisher.launch"/>
+    <include file="$(find uav_model)/launch/uav_tf.launch"/>
+
+  <!-- tf and load stuff in parameter server-->
+  <node pkg="tf" type="static_transform_publisher" name="tf_world_target" args="1.0 0.0 1.65 0 0 0 world target 10" />
+  <node pkg="tf" type="static_transform_publisher" name="tf_world_map" args="0.0 0.0 0.0 0 0 0 world map 10" />
+  
+ <param name="object_height" type="double" value="0.3" />
+ <param name="object_radius" type="double" value="0.2" />
+ <param name="cam_alpha" type="double" value="45.0" />
+ <param name="cam_beta" type="double" value="10.0" />
+ <param name="cam_tau" type="double" value="10.0" />
+ <param name="view_point_number" type="double" value="6.0" />	
+		
+
+  <!-- Octomap Server -->
+    <node pkg="octomap_server" type="octomap_server_node" name="octomap_server">
+      <param name="resolution" value="0.1" />
+      <param name="frame_id" type="string" value="/world" />
+      <param name="max_sensor_range" value="5.0" />
+      <param name="publish_free_space" value="true" />
+      <param name="occupancy_min_z" value="0.2"/>
+      <param name="occupancy_max_z" value="5.0"/>
+      <param name="latch" value="false" />
+     <!-- data source to integrate (PointCloud2) -->
+      <remap from="cloud_in" to="/camera/depth/points" />
+    </node>
+	
+</launch>

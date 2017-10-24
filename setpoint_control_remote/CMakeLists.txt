@@ -11,6 +11,10 @@ find_package(catkin REQUIRED COMPONENTS
   message_generation
   geometry_msgs
   tf
+  pcl_ros
+  pcl_conversions
+  pcl_msgs
+  sensor_msgs
 )
 
 ## System dependencies are found with CMake's conventions
@@ -25,6 +29,7 @@ find_package(Boost REQUIRED COMPONENTS system)
     FILES
 	DIRECTORY action
     FILES setpoint_control_commands.action
+    cloud_snapshoot.action
  )
 
 ## Generate added messages and services with any dependencies listed here
@@ -40,7 +45,7 @@ find_package(Boost REQUIRED COMPONENTS system)
 ## catkin specific configuration ##
 ###################################
 catkin_package(
-CATKIN_DEPENDS actionlib_msgs
+CATKIN_DEPENDS actionlib_msgs pcl_ros sensor_msgs pcl_conversions pcl_msgs
 )
 
 ###########

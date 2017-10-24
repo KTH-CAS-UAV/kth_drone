@@ -1,0 +1,10 @@
+#goal definition
+geometry_msgs/PoseStamped[] circular_view_points
+float32[] target
+float32[] size
+---
+#result definition
+int32 confirmation
+---
+#feedback
+int32 progress

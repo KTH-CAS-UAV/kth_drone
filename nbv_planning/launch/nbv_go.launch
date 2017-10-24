@@ -1,0 +1,13 @@
+<launch>
+  <!-- defult launch script for KTH/CSC px4 simulation -->
+  
+ 
+
+  <!-- launch the nodes!!!!!!!-->
+  <node pkg="nbv_planning" type="nbv_drone" name="nbv_drone" output="screen"/>
+  <node pkg="circle_vp" type="circle_vp" name="circle_vp" output="screen"/>
+  <node pkg="setpoint_control_remote" type="setpoint_control_remote" name="setpoint_control_remote" output="screen"/>
+  
+ 
+	
+</launch>
