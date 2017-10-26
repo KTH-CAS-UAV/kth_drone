@@ -186,7 +186,8 @@ class nbv_drone_boss
   void cloud_snapshoot(const nbv_planning::cloud_snapshootGoalConstPtr &goal)
   {
     //recived the path to the saved point cloud
-    path_to_cloud=goal->path;
+    path_to_cloud=goal->cloud_path;
+    Eigen::Affine3d cloud_pose = drone_p_to_view_p(goal->cloud_pose);
 
 
     //we get the cloudpath and load it from the disk
@@ -200,7 +201,7 @@ class nbv_drone_boss
             
 
     ROS_INFO("NBV: Updating map");
-    m_planner->update_current_volume(cloud, view_poses_it[nbv_index]);
+    m_planner->update_current_volume(cloud, cloud_pose);
     m_planner->publish_octomap();
     std::cout << "NBV: Number of unobserved cells=";
     std::flush(std::cout);
@@ -223,7 +224,8 @@ ros::Duration(5.2).sleep();
 
     iterative_view_points(view,score);
 
-    view_poses.erase(view_poses.begin() + view);
+    //TODO: should not be neccesary ...
+    //view_poses.erase(view_poses.begin() + view);
     //nbv_index=view;
     //send_drone_setpoint(view);
 
@@ -240,9 +242,9 @@ ros::Duration(5.2).sleep();
     ROS_INFO("NBV: Got circular view points");
     std::cout << "target size:" << goal->target.size() << std::endl;
     //recived a target:
-    Eigen::Vector3f origin(goal->target[0],goal->target[1],goal->target[2]);
+    Eigen::Vector3f origin(goal->target[0],goal->target[1],goal->target[2]-0.5);
     Eigen::Vector3f extents(goal->size[0],goal->size[1],goal->size[2]);
-    nbv_planning::TargetVolume volume(0.05, origin, extents);
+    nbv_planning::TargetVolume volume(0.01, origin, extents);
     ROS_INFO("NBV: updating volume");
     m_planner->set_target_volume(volume);
 
@@ -300,7 +302,7 @@ ros::Duration(5.2).sleep();
   {
     ROS_INFO("NBV:Iterative********************************''");
     double ig_curr=score;
-    double ig_next=score+1;
+    double ig_next=score-1;
     Eigen::Affine3d curr_view_pose=view_poses[view];
     std::vector<Eigen::Affine3d> next_view_poses;
     unsigned int t_view;
@@ -316,7 +318,7 @@ ros::Duration(5.2).sleep();
       //evaluate
       
       bool got_view;
-      got_view = m_planner->choose_next_view(true, t_view, ig_next);
+      got_view = m_planner->choose_next_view(false, t_view, ig_next);
       if(ig_next>ig_curr)
       {
         curr_view_pose=next_view_poses[t_view];
@@ -442,13 +444,13 @@ int main(int argc, char **argv) {
     double score;
     unsigned int view;
     bool got_view;
-    got_view = nbv_db.m_planner->choose_next_view(true, view, score);
+    got_view = nbv_db.m_planner->choose_next_view(false, view, score);
 
     //refine view with iterative aproche
     nbv_db.iterative_view_points(view,score);
 
     //delete the view pose
-    nbv_db.view_poses.erase(nbv_db.view_poses.begin() + view);
+    //nbv_db.view_poses.erase(nbv_db.view_poses.begin() + view);
 
 
     //we send the best view of to the drone and weit for the pointcloud to be send back

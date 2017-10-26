@@ -1,5 +1,6 @@
 #goal definition
-string path
+string cloud_path
+geometry_msgs/PoseStamped cloud_pose
 ---
 #result definition
 int32 confirmation

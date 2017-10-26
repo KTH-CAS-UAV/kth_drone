@@ -72,7 +72,7 @@ class circle_view_points
     bool send_vp_succesfull;
 
 
-    circle_view_points():got_params(false),x_dim(2.0),y_dim(2.0),z_dim(2.2),ac_circle_vp("circular_view_points", true),send_vp_succesfull(false)
+    circle_view_points():got_params(false),x_dim(4.0),y_dim(4.0),z_dim(4.2),ac_circle_vp("circular_view_points", true),send_vp_succesfull(false)
     {
       //set up subs/pubs
       vp_pub = nh_.advertise<geometry_msgs::PoseArray>( "circular_view_points", 1 );
@@ -126,9 +126,9 @@ class circle_view_points
         a_target.push_back(tp.getX());
         a_target.push_back(tp.getY());
         a_target.push_back(tp.getZ());
-        size.push_back(object_r);
-        size.push_back(object_h);
-        size.push_back(0.5);
+        size.push_back(object_r*2);
+        size.push_back(object_r*2);
+        size.push_back(object_h*2);
 
         //calc Z
         double vp_z;

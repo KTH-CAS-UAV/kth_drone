@@ -45,6 +45,9 @@ namespace nbv_planning {
         m_octree = OcTreeT(new octomap::OcTree(m_target_volume.get_scale()));
         m_octree->setClampingThresMin(0.12);
         m_octree->setClampingThresMax(0.97);
+        //m_octree->setClampingThresMin(0.3);
+        //m_octree->setClampingThresMax(0.7);
+        
         m_octree->setProbHit(0.7);
         m_octree->setProbMiss(0.4);
         m_octree->setOccupancyThres(0.5);

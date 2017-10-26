@@ -211,7 +211,8 @@ class cloud_snapshoot
   public:
     bool save_cloud;
     int snapshot_count;
-    string snapshoot_path;
+    //string snapshoot_path;
+    geometry_msgs::PoseStamped cloud_pose;
 
     cloud_snapshoot():ac_cloud_snap("cloud_snapshoot", true),snapshot_count(0),save_cloud(false)
     {
@@ -229,11 +230,12 @@ class cloud_snapshoot
 
 
   //action is action
-  void send_snapshoot_path()
+  void send_snapshoot_path(string snapshoot_path)
   {
     // send the path to the cloud
     setpoint_control_remote::cloud_snapshootGoal goal;
-    goal.path = snapshoot_path;
+    goal.cloud_path = snapshoot_path;
+    goal.cloud_pose = cloud_pose;
     // Need boost::bind to pass in the 'this' pointer
     ac_cloud_snap.sendGoal(goal,
                 boost::bind(&cloud_snapshoot::confirmation_snapshoot, this, _1, _2),
@@ -257,7 +259,7 @@ class cloud_snapshoot
 
     stringstream ss_num;
     ss_num << snapshot_count;
-    snapshoot_path = ros::package::getPath("setpoint_control_remote") + "/clouds/cloud_" + ss_num.str() + ".pcd";   // Read the file
+    string snapshoot_path = ros::package::getPath("setpoint_control_remote") + "/clouds/cloud_" + ss_num.str() + ".pcd";   // Read the file
     
     ROS_INFO_STREAM("Received point cloud with " << cloud_msg->height*cloud_msg->width << " points.");
 
@@ -279,7 +281,7 @@ class cloud_snapshoot
     */
     save_cloud=false;
     snapshot_count++;
-    send_snapshoot_path();
+    send_snapshoot_path(snapshoot_path);
 
   }
 
@@ -395,7 +397,11 @@ int main(int argc, char **argv)
         {
           ROS_INFO_THROTTLE(5, "Mode: 2 (hold position)");
           if(new_pose)
+          {
             cs.save_cloud=true;
+            cs.cloud_pose=ds.current_pose;
+          }
+            
           
           new_pose=false;
             //stay in place
