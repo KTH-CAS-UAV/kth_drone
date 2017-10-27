@@ -81,6 +81,8 @@ void nbv_planning::NBVFinderROS::publish_octomap() {
     }
 }
 
+
+
 bool nbv_planning::NBVFinderROS::update_current_volume(const sensor_msgs::PointCloud2 &cloud,
                                                        const Eigen::Affine3d &sensor_origin) {
     nbv_planning::NBVFinder::CloudPtr pcl_cloud(new nbv_planning::NBVFinder::Cloud());
@@ -97,6 +99,44 @@ inline geometry_msgs::Point convert_vector_to_point(const Eigen::Vector3d &vecto
     return point;
 }
 
+//publish unobserved cells
+
+void nbv_planning::NBVFinderROS::publish_octomap_unobserved_cells() {
+    MarkerArray octo_unobserved;
+    uint id=0;
+    
+        int count = 0;
+        Eigen::Vector3f lower = m_target_volume.get_origin() - m_target_volume.get_extents();
+        Eigen::Vector3f upper = m_target_volume.get_origin() + m_target_volume.get_extents();
+        for (double x=lower(0);x<upper(0);x+=m_target_volume.get_scale()){
+            for (double y=lower(1);y<upper(1);y+=m_target_volume.get_scale()) {
+                for (double z=lower(2);z<upper(2);z+=m_target_volume.get_scale()){
+                    octomap::OcTreeNode *node = m_octree->search(x,y,z);
+                    if (node == NULL)
+                    {
+                        Marker octo_cell;
+                        octo_cell.id = id++;
+                        octo_cell.header.frame_id = "/map";
+                        octo_cell.type = Marker::CUBE;
+                        octo_cell.action = Marker::ADD;
+                        octo_cell.scale.x = 0.05;
+                        octo_cell.scale.y = 0.05;
+                        octo_cell.scale.z = 0.05;
+                        octo_cell.ns = "Octo_unobserved";
+                        octo_cell.color.a=1;
+                        octo_cell.color.r=1;
+                        octo_cell.pose.position.x=x;
+                        octo_cell.pose.position.y=y;
+                        octo_cell.pose.position.z=z;
+                        octo_unobserved.markers.push_back(octo_cell);
+
+                    }
+                }
+            }
+        }
+        m_volume_marker_publisher_octo_unobserved.publish(octo_unobserved);        
+    }
+
 void nbv_planning::NBVFinderROS::publish_views() {
     MarkerArray cameras;
     uint id=0;
@@ -112,6 +152,8 @@ void nbv_planning::NBVFinderROS::publish_views() {
         camera.color.g=1;
 
         std::vector<Eigen::Vector3d> frustum = m_sensor_model.get_frustum_vertices(m_sensor_model.get_min_range()+0.3);
+        //std::vector<Eigen::Vector3d> frustum = m_sensor_model.get_frustum_vertices(m_sensor_model.get_max_range());
+        
         geometry_msgs::Pose pose;
         tf::poseEigenToMsg(*view, pose);
         camera.pose = pose;
@@ -195,6 +237,8 @@ nbv_planning::NBVFinderROS::NBVFinderROS(const SensorModel &m_sensor_model, ros:
     m_volume_marker_publisher = m_node_handle.advertise<Marker>("target_volume", 10, true);
     m_octomap_publisher = m_node_handle.advertise<octomap_msgs::Octomap>("octomap", 10, true);
     m_view_marker_publisher = m_node_handle.advertise<MarkerArray>("views", 10, true);
+    m_volume_marker_publisher_octo_unobserved = m_node_handle.advertise<MarkerArray>("Octo_unobserved", 10, true);
+
 
     std::cout << "Creating a ROS wrapped NBV planner in namespace " << m_node_handle.getNamespace() <<
     std::endl;

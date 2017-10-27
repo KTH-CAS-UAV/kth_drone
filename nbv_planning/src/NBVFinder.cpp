@@ -1,7 +1,7 @@
 //
 // Created by chris on 23/11/15.
 //
-
+#include <iostream>
 #include "nbv_planning/NBVFinder.h"
 #include <octomap_ros/conversions.h>
 #include <octomap/math/Quaternion.h>
@@ -9,6 +9,13 @@
 #include <pcl/filters/passthrough.h>
 #include <pcl/common/transforms.h>
 #include <pcl/common/time.h>
+
+//TF stuff
+#include <tf/transform_datatypes.h>
+#include <tf/transform_listener.h>
+#include <tf_conversions/tf_eigen.h>
+#include <tf/transform_broadcaster.h>
+ #include <eigen_conversions/eigen_msg.h>
 
 /**
 * @brief Conversion from a PCL pointcloud to octomap::Pointcloud, used internally in OctoMap
@@ -69,7 +76,8 @@ namespace nbv_planning {
 
     bool NBVFinder::update_current_volume(NBVFinder::CloudPtr cloud, const Eigen::Affine3d &sensor_origin) {
         // Filter the pointcloud so that it only has stuff inside the area covered by the view set.
-        if (m_candidate_views.size() > 1) { // only filter if there are some views, otherwise we just take the lot
+        
+        /*if (m_candidate_views.size() > 1) { // only filter if there are some views, otherwise we just take the lot
             Eigen::Vector3d min,max;
             calculate_viewed_volume(min,max);
             ROS_INFO("Filtering out non-view volume cloud");
@@ -92,6 +100,7 @@ namespace nbv_planning {
             pass_z.filter(*cloud);
 
         }
+        */
         // The target
         pcl::transformPointCloud(*cloud, *cloud, sensor_origin);
 
@@ -121,6 +130,9 @@ namespace nbv_planning {
         // Find the exit
         // Get the cells along the way
         // Rate the view using the algorithm in the paper
+        geometry_msgs::Pose temp;
+        tf::poseEigenToMsg(view,temp);
+        std::cout << "****Evaluating view: x " << temp.position.x << " y; " << temp.position.y << " z: " << temp.position.z << std::endl;
         double view_gain=0;
         Rays rays = m_sensor_model.get_rays(view, m_target_volume);
 
@@ -154,8 +166,19 @@ namespace nbv_planning {
                     // We got to the start of the part of the ray that is inside the volume
                     counting=true;
                 }
-                double prev_cell_value = get_node_value(*(cell-1));
+                //double prev_cell_value = get_node_value(*(cell-1));
                 double current_cell_value = get_node_value(*cell);
+
+                //new sceme counting only the unobserved cells
+                if (counting) {
+                    // Calculate the info gain on this cell and add it to the tally
+                    if(current_cell_value==0.5)
+                        view_gain +=1;
+                }
+
+                ///end new sceme
+                /*
+
 
 //                ray_vis*=current_cell_value;
 //                if (counting && current_cell_value==0.5){
@@ -208,8 +231,10 @@ namespace nbv_planning {
                                           (1-prev_p_o)*std::log(1-prev_p_o);
                     double gain = prev_entropy - new_entropy; //(Eqn. 4)
                     view_gain +=gain;
-                }
 
+                }
+                
+                */
             }
         }
 

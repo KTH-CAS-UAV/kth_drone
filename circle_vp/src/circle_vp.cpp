@@ -126,9 +126,9 @@ class circle_view_points
         a_target.push_back(tp.getX());
         a_target.push_back(tp.getY());
         a_target.push_back(tp.getZ());
-        size.push_back(object_r*2);
-        size.push_back(object_r*2);
-        size.push_back(object_h*2);
+        size.push_back(object_r);
+        size.push_back(object_r);
+        size.push_back(object_h);
 
         //calc Z
         double vp_z;

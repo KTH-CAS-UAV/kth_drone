@@ -37,6 +37,8 @@ namespace nbv_planning {
          * under the namespace of the node handle.
          */
         void publish_volume_marker();
+        
+        void publish_octomap_unobserved_cells();
 
         /**
          * Publish the current internal octomap for visualisation in RViz. Topic is "octomap" under the node's namespace.
@@ -57,6 +59,7 @@ namespace nbv_planning {
     private:
         ros::NodeHandle m_node_handle;
         ros::Publisher m_volume_marker_publisher;
+        ros::Publisher m_volume_marker_publisher_octo_unobserved;
         ros::Publisher m_octomap_publisher;
         ros::Publisher m_view_marker_publisher;
     };
