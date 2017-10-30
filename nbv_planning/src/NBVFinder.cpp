@@ -133,7 +133,8 @@ namespace nbv_planning {
         geometry_msgs::Pose temp;
         tf::poseEigenToMsg(view,temp);
         std::cout << "****Evaluating view: x " << temp.position.x << " y; " << temp.position.y << " z: " << temp.position.z << std::endl;
-        double view_gain=0;
+        double view_score=0;
+        double sigma_sqr=0.1*0.1;
         Rays rays = m_sensor_model.get_rays(view, m_target_volume);
 
         float max_range = m_sensor_model.get_max_range();
@@ -155,9 +156,9 @@ namespace nbv_planning {
                 continue; // this ray does not intersect the volume of interest
 
             bool counting=false; // only count the information gain for cells that are inside the target volume
-            double prev_p_x = 1;
-            double prev_p_o = 0;
             int number_of_cells_passed =0;
+
+
 //            double ray_vis=1;
             for (octomap::KeyRay::iterator cell = full_ray.begin(); cell < full_ray.end(); ++cell) {
                 number_of_cells_passed+=1;
@@ -168,12 +169,22 @@ namespace nbv_planning {
                 }
                 //double prev_cell_value = get_node_value(*(cell-1));
                 double current_cell_value = get_node_value(*cell);
+                if(current_cell_value >=0.8)
+                        cell=full_ray.end();
 
                 //new sceme counting only the unobserved cells
                 if (counting) {
                     // Calculate the info gain on this cell and add it to the tally
-                    if(current_cell_value==0.5)
-                        view_gain +=1;
+                    
+                    if(current_cell_value<=0.2 || current_cell_value >=0.8){
+                        view_score +=0;
+                    }
+                    else{
+                        //
+                        double gain = (1/sqrt(2*M_PI*sigma_sqr))*exp(-(pow(current_cell_value-0.5,2)/(2*sigma_sqr)));
+                        view_score+=gain;
+                        //std::cout << "curr cell: " << current_cell_value << " view_score gain: " << gain << std::endl;
+                    }
                 }
 
                 ///end new sceme
@@ -238,7 +249,7 @@ namespace nbv_planning {
             }
         }
 
-        return view_gain;
+        return view_score;
     }
 
     void NBVFinder::save_temporary_map() {
@@ -255,11 +266,11 @@ namespace nbv_planning {
         return value;
     }
 
-    bool NBVFinder::choose_next_view(bool disable_view, unsigned int &selected_view_index, double &view_score) {
+    bool NBVFinder::choose_next_view(bool disable_view, unsigned int &selected_view_index, double &view_score,bool save_to_disk) {
         // Choose which of the views provided by set_candidate_views is the best to select.
         std::vector<double> scores;
         scores.reserve(m_available_view_idx.size());
-
+        int save_counter=0;
         double max_score=0;
         double score;
         unsigned  int best_index =-1;
@@ -267,6 +278,19 @@ namespace nbv_planning {
                 view_index<m_available_view_idx.end();++view_index) {
             std::cout << "Evaluating view " << *view_index << std::endl;
             score = evaluate_view(m_candidate_views[*view_index]);
+
+            if(save_to_disk)
+            {
+                //save it to the disk
+                //format: "id,x,y,z,roll,pitch,yaw,score"
+                
+
+
+
+                save_counter++;
+            }
+
+
             if (score > max_score) {
                 max_score=score;
                 best_index = *view_index;

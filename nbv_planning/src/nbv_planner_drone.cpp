@@ -278,7 +278,7 @@ ros::Duration(5.2).sleep();
     ROS_INFO("NBV: Got circular view points");
     std::cout << "target size:" << goal->target.size() << std::endl;
     //recived a target:
-    Eigen::Vector3f origin(goal->target[0],goal->target[1],goal->target[2]-0.5);
+    Eigen::Vector3f origin(goal->target[0],goal->target[1],goal->target[2]);
     Eigen::Vector3f extents(goal->size[0],goal->size[1],goal->size[2]);
     nbv_planning::TargetVolume volume(0.05, origin, extents);
     ROS_INFO("NBV: updating volume");
@@ -288,18 +288,28 @@ ros::Duration(5.2).sleep();
     vec_circular_vp=goal->circular_view_points;
 
     //fix the orientation so it fits the camera
-    
-    Eigen::Affine3d originvp;
-    geometry_msgs::Pose temp_vp2;
-    temp_vp2.orientation=tf::createQuaternionMsgFromRollPitchYaw(-M_PI/2,0,M_PI/2);
+    std::vector<Eigen::Affine3d> next_view_poses;
+    next_view_poses = generate_all_vp(drone_p_to_view_p(vec_circular_vp[0]),10);
+    m_planner->set_candidate_views(next_view_poses);
+
+
+/*
+    //Eigen::Affine3d originvp;
+    //geometry_msgs::Pose temp_vp2;
+    //temp_vp2.orientation=tf::createQuaternionMsgFromRollPitchYaw(-M_PI/2,0,M_PI/2);
     for(int i=0;i< vec_circular_vp.size();i++)
     {
         view_poses.push_back(drone_p_to_view_p(vec_circular_vp[i]));
 
     }
+    
+    
+
     //set the planner
     ROS_INFO("NBV: Setting poses");
     m_planner->set_candidate_views(view_poses);  
+
+*/
     ros::Duration(0.2).sleep();
     m_planner->publish_views();
     ros::Duration(1.2).sleep();
@@ -413,36 +423,33 @@ ros::Duration(5.2).sleep();
   }
 
 
-  std::vector<Eigen::Affine3d> generate_all_vp(Eigen::Affine3d start_vp)
+  std::vector<Eigen::Affine3d> generate_all_vp(Eigen::Affine3d start_vp, int dim)
   {
     std::vector<Eigen::Affine3d> next_vp;
     Eigen::Affine3d temp_vp;
-
-    for(int i=0;i<6;i++)
+    //find outer corner vp
+    temp_vp=start_vp;
+    temp_vp.translate(Eigen::Vector3d(-stepsize*dim,0.0,0));
+    temp_vp.translate(Eigen::Vector3d(0,-stepsize*dim,0));
+    temp_vp.translate(Eigen::Vector3d(0,0.0,-stepsize*dim));
+    
+    for(int i=0;i<dim*2;i++)
     {
-        temp_vp=start_vp;
-        switch(i){
-            case 0: temp_vp.translate(Eigen::Vector3d(0,0.0,-stepsize));
-                    next_vp.push_back(temp_vp);
-                    break;
-            case 1: temp_vp.translate(Eigen::Vector3d(0,+stepsize,0));
-                    next_vp.push_back(temp_vp);
-                    break;
-            case 2: temp_vp.translate(Eigen::Vector3d(-stepsize,0.0,0));
-                    next_vp.push_back(temp_vp);
-                    break;
-            case 3: temp_vp.translate(Eigen::Vector3d(+stepsize,0.0,0));
-                    next_vp.push_back(temp_vp);
-                    break;
-            case 4: temp_vp.translate(Eigen::Vector3d(0,-stepsize,0));
-                    next_vp.push_back(temp_vp);
-                    break;
-            case 5: temp_vp.translate(Eigen::Vector3d(0,0.0,+stepsize));
-                    next_vp.push_back(temp_vp);
-                    break;
+        
 
+        for(int j=0;j<dim*2;j++)
+        {
+            for(int k=0;k<dim*2;k++)
+            {
+                next_vp.push_back(temp_vp);
+                temp_vp.translate(Eigen::Vector3d(0,0.0,+stepsize));
+            }
+            temp_vp.translate(Eigen::Vector3d(0,0.0,-stepsize*dim*2));
+            temp_vp.translate(Eigen::Vector3d(0,+stepsize,0));
         }
-    }
+        temp_vp.translate(Eigen::Vector3d(0,-stepsize*dim*2,0));
+        temp_vp.translate(Eigen::Vector3d(+stepsize,0,0));
+    }   
 
     return next_vp;
   }
@@ -544,6 +551,11 @@ int main(int argc, char **argv) {
     double score;
     unsigned int view;
     bool got_view;
+
+    //research mode:
+
+
+    //normal
     got_view = nbv_db.m_planner->choose_next_view(false, view, score);
 
     //refine view with iterative aproche
