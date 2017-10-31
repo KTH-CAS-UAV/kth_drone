@@ -93,7 +93,7 @@ namespace nbv_planning {
          * @param disable_view   If true then the selected view will be removed from candidates, so as to not be selected again
          * @return false if no view could be chosen (e.g none left to select from)
          */
-        bool choose_next_view(bool disable_view, unsigned int &selected_view_index, double &view_score);
+        bool choose_next_view(bool disable_view, unsigned int &selected_view_index, double &view_score,bool save_to_disk);
 
         /**
          * Evaluate a view, returning the expected information of that view.

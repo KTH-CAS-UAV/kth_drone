@@ -124,7 +124,7 @@ int main(int argc, char **argv) {
 //    unsigned int view =0;
     while (got_view) {
         unsigned int view;
-        got_view = planner.choose_next_view(true, view, score);
+        got_view = planner.choose_next_view(true, view, score,false);
 
         if (got_view) {
             ROS_INFO("Updating map");

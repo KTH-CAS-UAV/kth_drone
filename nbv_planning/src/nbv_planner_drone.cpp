@@ -255,7 +255,7 @@ ros::Duration(5.2).sleep();
     double score;
     unsigned int view;
     bool got_view;
-    got_view = m_planner->choose_next_view(true, view, score);
+    got_view = m_planner->choose_next_view(true, view, score,false);
     std::cout << "NBV: next best view is: " << view << std::endl;
 
     iterative_view_points(view,score);
@@ -289,7 +289,7 @@ ros::Duration(5.2).sleep();
 
     //fix the orientation so it fits the camera
     std::vector<Eigen::Affine3d> next_view_poses;
-    next_view_poses = generate_all_vp(drone_p_to_view_p(vec_circular_vp[0]),10);
+    next_view_poses = generate_all_vp(drone_p_to_view_p(vec_circular_vp[23]),10);
     m_planner->set_candidate_views(next_view_poses);
 
 
@@ -312,6 +312,7 @@ ros::Duration(5.2).sleep();
 */
     ros::Duration(0.2).sleep();
     m_planner->publish_views();
+    m_planner->publish_volume_marker();
     ros::Duration(1.2).sleep();
 
     
@@ -367,7 +368,7 @@ ros::Duration(5.2).sleep();
       //evaluate
       
       bool got_view;
-      got_view = m_planner->choose_next_view(false, t_view, ig_next);
+      got_view = m_planner->choose_next_view(false, t_view, ig_next,false);
       if(ig_next>ig_curr)
       {
         curr_view_pose=next_view_poses[t_view];
@@ -553,10 +554,10 @@ int main(int argc, char **argv) {
     bool got_view;
 
     //research mode:
-
+    got_view = nbv_db.m_planner->choose_next_view(false, view, score,true);
 
     //normal
-    got_view = nbv_db.m_planner->choose_next_view(false, view, score);
+    //got_view = nbv_db.m_planner->choose_next_view(false, view, score,false);
 
     //refine view with iterative aproche
     nbv_db.iterative_view_points(view,score);

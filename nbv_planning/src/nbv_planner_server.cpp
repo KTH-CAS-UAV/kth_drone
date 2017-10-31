@@ -93,7 +93,7 @@ private:
     bool select_next_view(nbv_planning::SelectNextViewRequest &req, nbv_planning::SelectNextViewResponse &resp) {
         unsigned int view_index;
         double score;
-        if (!m_planner->choose_next_view(req.disable_view, view_index, score)) {
+        if (!m_planner->choose_next_view(req.disable_view, view_index, score,false)) {
             resp.success=false;
             return true;
         }

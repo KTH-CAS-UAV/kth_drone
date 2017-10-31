@@ -72,7 +72,7 @@ class circle_view_points
     bool send_vp_succesfull;
 
 
-    circle_view_points():got_params(false),x_dim(4.0),y_dim(4.0),z_dim(4.2),ac_circle_vp("circular_view_points", true),send_vp_succesfull(false)
+    circle_view_points():got_params(false),x_dim(8.0),y_dim(8.0),z_dim(8.2),ac_circle_vp("circular_view_points", true),send_vp_succesfull(false)
     {
       //set up subs/pubs
       vp_pub = nh_.advertise<geometry_msgs::PoseArray>( "circular_view_points", 1 );

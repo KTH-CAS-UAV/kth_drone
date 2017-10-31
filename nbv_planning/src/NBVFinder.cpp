@@ -17,6 +17,13 @@
 #include <tf/transform_broadcaster.h>
  #include <eigen_conversions/eigen_msg.h>
 
+//write to file
+#include <ros/ros.h>
+#include <ros/console.h>
+#include <ros/package.h>
+#include <string> 
+#include <fstream>
+
 /**
 * @brief Conversion from a PCL pointcloud to octomap::Pointcloud, used internally in OctoMap
 *
@@ -209,7 +216,7 @@ namespace nbv_planning {
                                                                (1-p_o_m_minus_1_given_x_m)*(1-next_p_x));
 
                 // Clamp the value. This is ugly and not in the paper but seams necessary...
-//                if (next_p_x > prev_p_x)
+//                if (next_p_x > prev_p_x)#include <ros/package.h>
 //                    next_p_x = prev_p_x;
                 // actually maybe it is not necessary after all...
 
@@ -283,7 +290,21 @@ namespace nbv_planning {
             {
                 //save it to the disk
                 //format: "id,x,y,z,roll,pitch,yaw,score"
-                
+                geometry_msgs::Pose temp;
+                tf::poseEigenToMsg(m_candidate_views[*view_index],temp);
+                tf::Quaternion q(temp.orientation.x, temp.orientation.y, temp.orientation.z, temp.orientation.w);
+                tf::Matrix3x3 m(q);
+                double roll, pitch, yaw;
+                m.getRPY(roll, pitch, yaw);
+
+                std::ofstream outfile;
+                //std::string path = ros::package::getPath("nbv_planning") + "/Igain/data.txt";
+
+                outfile.open("/home/mwelle/catkin_ws/src/kth_drone/nbv_planning/Igain/data.txt", std::ios_base::app);
+
+                outfile << save_counter << "," << temp.position.x << "," << temp.position.y << "," << temp.position.z << ",";
+                outfile << roll << "," << pitch << "," << yaw << ","; 
+                outfile << score << "\n";               
 
 
 
