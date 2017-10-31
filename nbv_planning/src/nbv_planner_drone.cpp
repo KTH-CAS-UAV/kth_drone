@@ -288,12 +288,38 @@ ros::Duration(5.2).sleep();
     vec_circular_vp=goal->circular_view_points;
 
     //fix the orientation so it fits the camera
+    //expiriment
+    //best vps:
+    //0.0719673   0.568699    1.88283 -2.21   0.000475563 2.88043
+    //0.604969    -0.141881   1.8829  -2.21   0.000475563 1.30964
+    Eigen::Affine3d view_p;
+
+    geometry_msgs::Pose temp ;
+    temp.position.x=0.0719673;
+    temp.position.y=0.568699;
+    temp.position.z=1.88283;
+    temp.orientation=tf::createQuaternionMsgFromRollPitchYaw(-2.21,0.000475563,2.88043);
+    
+      
+    tf::poseMsgToEigen  (temp,view_p);
     std::vector<Eigen::Affine3d> next_view_poses;
-    next_view_poses = generate_all_vp(drone_p_to_view_p(vec_circular_vp[23]),10);
-    m_planner->set_candidate_views(next_view_poses);
+    next_view_poses.push_back(view_p);
+
+    temp.position.x=0.604969;
+    temp.position.y=-0.141881;
+    temp.position.z=1.8829;
+    temp.orientation=tf::createQuaternionMsgFromRollPitchYaw(-2.21,0.000475563,1.30964);
+    
+      
+    tf::poseMsgToEigen  (temp,view_p);
+    next_view_poses.push_back(view_p);
 
 
-/*
+    //next_view_poses = generate_all_vp(drone_p_to_view_p(vec_circular_vp[23]),10);
+    //m_planner->set_candidate_views(next_view_poses);
+
+
+
     //Eigen::Affine3d originvp;
     //geometry_msgs::Pose temp_vp2;
     //temp_vp2.orientation=tf::createQuaternionMsgFromRollPitchYaw(-M_PI/2,0,M_PI/2);
@@ -309,7 +335,7 @@ ros::Duration(5.2).sleep();
     ROS_INFO("NBV: Setting poses");
     m_planner->set_candidate_views(view_poses);  
 
-*/
+
     ros::Duration(0.2).sleep();
     m_planner->publish_views();
     m_planner->publish_volume_marker();
@@ -368,7 +394,7 @@ ros::Duration(5.2).sleep();
       //evaluate
       
       bool got_view;
-      got_view = m_planner->choose_next_view(false, t_view, ig_next,false);
+      got_view = m_planner->choose_next_view(false, t_view, ig_next,true);
       if(ig_next>ig_curr)
       {
         curr_view_pose=next_view_poses[t_view];
