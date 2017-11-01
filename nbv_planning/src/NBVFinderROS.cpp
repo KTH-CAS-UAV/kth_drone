@@ -15,7 +15,7 @@ void nbv_planning::NBVFinderROS::publish_volume_marker() {
     Marker marker;
     visualization_msgs::Marker points, line_strip, line_list;
 
-    marker.header.frame_id = "/map";
+    marker.header.frame_id = "/world";
     marker.header.stamp = ros::Time::now();
     marker.ns = "target_volume";
     marker.action = visualization_msgs::Marker::ADD;
@@ -76,7 +76,7 @@ void nbv_planning::NBVFinderROS::publish_octomap() {
     if (m_octomap_publisher.getNumSubscribers() > 0) {
         octomap_msgs::Octomap msg;
         octomap_msgs::binaryMapToMsg(*m_octree, msg);
-        msg.header.frame_id="/map";
+        msg.header.frame_id="/world";
         m_octomap_publisher.publish(msg);
     }
 }
@@ -116,7 +116,7 @@ void nbv_planning::NBVFinderROS::publish_octomap_unobserved_cells() {
                     {
                         Marker octo_cell;
                         octo_cell.id = id++;
-                        octo_cell.header.frame_id = "/map";
+                        octo_cell.header.frame_id = "/world";
                         octo_cell.type = Marker::CUBE;
                         octo_cell.action = Marker::ADD;
                         octo_cell.scale.x = 0.05;
@@ -143,7 +143,7 @@ void nbv_planning::NBVFinderROS::publish_views() {
     for (std::vector<Eigen::Affine3d>::iterator view = m_candidate_views.begin(); view < m_candidate_views.end(); view++) {
         Marker camera;
         camera.id = id++;
-        camera.header.frame_id = "/map";
+        camera.header.frame_id = "/world";
         camera.type = Marker::LINE_LIST;
         camera.action = Marker::ADD;
         camera.scale.x = 0.01;

@@ -160,7 +160,10 @@ namespace nbv_planning {
 
             // iterate over the voxels and set them good?
             if (ray_inside_volume.size() <1)
-                continue; // this ray does not intersect the volume of interest
+            {
+              //std::cout << "miss!" << std::endl;
+              continue; // this ray does not intersect the volume of interest
+            }
 
             bool counting=false; // only count the information gain for cells that are inside the target volume
             int number_of_cells_passed =0;
@@ -169,27 +172,20 @@ namespace nbv_planning {
 
 
 //            double ray_vis=1;
-            for (octomap::KeyRay::iterator cell = full_ray.begin(); cell < full_ray.end(); ++cell) {
+            for (octomap::KeyRay::iterator cell = ray_inside_volume.begin(); cell < ray_inside_volume.end()+1; ++cell) {
                 number_of_cells_passed+=1;
 
-                if (*cell == *(ray_inside_volume.begin())) {
+                /*if (*cell == *(ray_inside_volume.begin())) {
                     // We got to the start of the part of the ray that is inside the volume
                     counting=true;
-                }
+                }*/
                 //double prev_cell_value = get_node_value(*(cell-1));
                 double current_cell_value = get_node_value(*cell);
                 //std::cout << "cur value::  " << current_cell_value << std::endl;
-                //if(current_cell_value >=0.8)
-                        //cell=full_ray.end();
-                if(current_cell_value==0.5)
-                        view_score+=1;
-                //new sceme counting only the unobserved cells
-                if (counting) {
-                    // Calculate the info gain on this cell and add it to the tally
-                    
-                    /*
-                    
-                    if(current_cell_value<=0.2 || current_cell_value >=0.8){
+                if(current_cell_value >=0.8)
+                        cell=full_ray.end();
+
+                if(current_cell_value<=0.2 || current_cell_value >=0.8){
                         view_score +=0;
                     }
                     else{
@@ -198,8 +194,9 @@ namespace nbv_planning {
                         view_score+=gain;
                         //std::cout << "curr cell: " << current_cell_value << " view_score gain: " << gain << std::endl;
                     }
-                    */
-                }
+                /*if(current_cell_value==0.5)
+                        view_score+=1;*/
+               
 
                 ///end new sceme
                 /*
@@ -293,7 +290,7 @@ namespace nbv_planning {
                 view_index<m_available_view_idx.end();++view_index) {
             std::cout << "Evaluating view " << *view_index << std::endl;
             score = evaluate_view(m_candidate_views[*view_index]);
-/*
+
             if(save_to_disk)
             {
                 //save it to the disk
@@ -319,7 +316,7 @@ namespace nbv_planning {
                 save_counter++;
             }
 
-*/
+
             if (score > max_score) {
                 max_score=score;
                 best_index = *view_index;
