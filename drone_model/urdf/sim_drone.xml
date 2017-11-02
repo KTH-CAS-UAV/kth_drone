@@ -29,7 +29,8 @@
   <joint name="drone_base_to_d_camera" type="fixed">
     <parent link="drone_base"/>
     <child link="d_camera"/>
-    <origin rpy="0.026 0.649 0.014" xyz="0.193 0.082 -0.256"/>
+    <!--origin rpy="0.026 0.649 0.014" xyz="0.193 0.082 -0.256"/-->
+    <origin rpy="0.026 0.0 0.014" xyz="0.193 0.082 -0.256"/>
   </joint>
 
 <!--

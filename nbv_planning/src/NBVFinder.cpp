@@ -83,8 +83,8 @@ namespace nbv_planning {
 
     bool NBVFinder::update_current_volume(NBVFinder::CloudPtr cloud, const Eigen::Affine3d &sensor_origin) {
         // Filter the pointcloud so that it only has stuff inside the area covered by the view set.
-        
-        /*if (m_candidate_views.size() > 1) { // only filter if there are some views, otherwise we just take the lot
+        /*
+        if (m_candidate_views.size() > 1) { // only filter if there are some views, otherwise we just take the lot
             Eigen::Vector3d min,max;
             calculate_viewed_volume(min,max);
             ROS_INFO("Filtering out non-view volume cloud");
@@ -106,8 +106,8 @@ namespace nbv_planning {
             pass_z.setInputCloud(cloud);
             pass_z.filter(*cloud);
 
-        }
-        */
+        }*/
+        
         // The target
         pcl::transformPointCloud(*cloud, *cloud, sensor_origin);
 
@@ -117,7 +117,17 @@ namespace nbv_planning {
         octomap::point3d origin(sensor_origin.translation().x(), sensor_origin.translation().y(),sensor_origin.translation().z());
 
 
+        m_octree->insertPointCloud(octomap_cloud, origin, -1,false,true);        
+        ros::Duration(0.1).sleep();
         m_octree->insertPointCloud(octomap_cloud, origin, -1,false,true);
+        ros::Duration(0.1).sleep();
+        m_octree->insertPointCloud(octomap_cloud, origin, -1,false,true);
+        ros::Duration(0.1).sleep();
+        m_octree->insertPointCloud(octomap_cloud, origin, -1,false,true);
+        ros::Duration(0.1).sleep();
+        m_octree->insertPointCloud(octomap_cloud, origin, -1,false,true);
+        m_octree->updateInnerOccupancy();
+        
         // m_octree->toMaxLikelihood();
         std::cout << "Octree now has " << m_octree->calcNumNodes() << " nodes.\n";
         return false;
@@ -172,7 +182,7 @@ namespace nbv_planning {
 
 
 //            double ray_vis=1;
-            for (octomap::KeyRay::iterator cell = ray_inside_volume.begin(); cell < ray_inside_volume.end()+1; ++cell) {
+            for (octomap::KeyRay::iterator cell = full_ray.begin(); cell < full_ray.end(); ++cell) {
                 number_of_cells_passed+=1;
 
                 /*if (*cell == *(ray_inside_volume.begin())) {

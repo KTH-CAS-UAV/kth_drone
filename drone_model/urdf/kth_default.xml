@@ -192,7 +192,8 @@
       <geometry>
         <box size=".01 .05 .01"/>
       </geometry>
-      <origin rpy="0.0 0.64 0 " xyz="0.075 0.0 0.0"/>
+      <!--origin rpy="0.0 0.64 0 " xyz="0.075 0.0 0.0"/-->
+      <origin rpy="0.0 0.0 0 " xyz="0.075 0.0 0.0"/>
 	<material name="black">
 	</material>
     </visual>
