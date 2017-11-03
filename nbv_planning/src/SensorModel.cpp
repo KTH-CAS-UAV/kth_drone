@@ -90,8 +90,8 @@ nbv_planning::SensorModel::SensorModel(float image_height, float image_width, Pr
     m_rays.reserve((unsigned long) (m_image_width * m_image_height));
     unsigned int i = 0;
     float ray_length = m_max_range - m_min_range;
-    for (unsigned int x = m_image_width*0.05; x < m_image_width-m_image_width*0.05; x+=sub_sample) {
-        for (unsigned y = m_image_height*0.05; y < m_image_height-m_image_height*0.05; y+=sub_sample) {
+    for (unsigned int x = 0; x < m_image_width; x+=sub_sample) {
+        for (unsigned y = 0; y < m_image_height; y+=sub_sample) {
             double u = x - m_projection_matrix(0, 2);
             double v = y - m_projection_matrix(1, 2);
             double f = m_projection_matrix(0, 0); // Why only use the x focal length?

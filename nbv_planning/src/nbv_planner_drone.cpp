@@ -141,7 +141,8 @@ class nbv_drone_boss
     bool stage1;
     bool stage2;
     bool got_tf;
-    std::vector<double> tf_xyz_rpy;
+    std::vector<double> tf1_xyz_rpy;
+    std::vector<double> tf2_xyz_rpy;
     double stepsize;
     ros::Publisher vp_pub; 
 
@@ -150,7 +151,7 @@ class nbv_drone_boss
 
     nbv_drone_boss():as_cloud_snapshoot(nh_, "cloud_snapshoot", boost::bind(&nbv_drone_boss::cloud_snapshoot, this, _1), false),
       as_circular_view_points(nh_, "circular_view_points", boost::bind(&nbv_drone_boss::circular_view_points, this, _1), false),
-      ac_drone_setpoint("setpoint_control_commands", true),stage1(true),stage2(false),stepsize(0.15),got_tf(false)
+      ac_drone_setpoint("setpoint_control_commands", true),stage1(true),stage2(false),stepsize(0.10),got_tf(false)
     {
         ROS_INFO("NBV: starting cloud snap server");
         as_cloud_snapshoot.start();
@@ -175,22 +176,39 @@ class nbv_drone_boss
 
     void get_static_tf_transform()
     {
-        tf::StampedTransform transform;
+        tf::StampedTransform transform1;
+        tf::StampedTransform transform2;
+
 
       // get tf transform from world to target frame
       try{
-        listener.lookupTransform("/drone_base", "/d_camera::camera_link",ros::Time(0), transform);
-        tf_xyz_rpy.push_back(transform.getOrigin().x());
-        tf_xyz_rpy.push_back(transform.getOrigin().y());
-        tf_xyz_rpy.push_back(transform.getOrigin().z());
+        listener.lookupTransform("/drone_base", "/d_camera::camera_link",ros::Time(0), transform1);
+        tf1_xyz_rpy.push_back(transform1.getOrigin().x());
+        tf1_xyz_rpy.push_back(transform1.getOrigin().y());
+        tf1_xyz_rpy.push_back(transform1.getOrigin().z());
         
-        tf::Quaternion q(transform.getRotation());
+        tf::Quaternion q(transform1.getRotation());
         tf::Matrix3x3 m(q);
         double roll, pitch, yaw;
         m.getRPY(roll, pitch, yaw);
-        tf_xyz_rpy.push_back(roll);
-        tf_xyz_rpy.push_back(pitch);
-        tf_xyz_rpy.push_back(yaw);
+        tf1_xyz_rpy.push_back(roll);
+        tf1_xyz_rpy.push_back(pitch);
+        tf1_xyz_rpy.push_back(yaw);
+
+        listener.lookupTransform("/d_camera::camera_link", "/drone_base",ros::Time(0), transform2);
+        tf2_xyz_rpy.push_back(transform2.getOrigin().x());
+        tf2_xyz_rpy.push_back(transform2.getOrigin().y());
+        tf2_xyz_rpy.push_back(transform2.getOrigin().z());
+        
+        tf::Quaternion q2(transform2.getRotation());
+        tf::Matrix3x3 m2(q2);
+        double roll2, pitch2, yaw2;
+        m.getRPY(roll2, pitch2, yaw2);
+        tf2_xyz_rpy.push_back(roll2);
+        tf2_xyz_rpy.push_back(pitch2);
+        tf2_xyz_rpy.push_back(yaw2);
+
+
         got_tf=true;        
         ROS_INFO("NBV: Got static tf");
       }
@@ -250,8 +268,8 @@ class nbv_drone_boss
 
 
     //*********expirimeeentewrt
-/*
 
+/*
 std::vector<Eigen::Affine3d> next_view_poses;
    for(int i=0;i< vec_circular_vp.size();i++)
    {
@@ -343,6 +361,31 @@ ros::Duration(5.2).sleep();
     //Eigen::Affine3d originvp;
     //geometry_msgs::Pose temp_vp2;
     //temp_vp2.orientation=tf::createQuaternionMsgFromRollPitchYaw(-M_PI/2,0,M_PI/2);
+
+     //*********expirimeeentewrt
+
+
+std::vector<Eigen::Affine3d> next_view_poses;
+   for(int i=0;i< vec_circular_vp.size();i++)
+   {
+
+     next_view_poses = generate_all_vp(drone_p_to_view_p(vec_circular_vp[i]),7);
+     m_planner->set_candidate_views(next_view_poses);
+     unsigned int view;
+     double score;
+     m_planner->choose_next_view(false, view, score,true);
+     ros::Duration(1.0).sleep();
+     std::cout << "*************************************************************************" << std::endl;
+     std::cout << "              " << i << "                        " << std::endl;
+     std::cout << "*************************************************************************" << std::endl;
+     ros::Duration(5.0).sleep();
+
+   }
+    int a =1/0;
+
+
+
+
     
     for(int i=0;i< vec_circular_vp.size();i++)
     {
@@ -408,7 +451,7 @@ ros::Duration(5.2).sleep();
     ROS_INFO_STREAM("Waiting for camera info on " << camera_info_topic );
     sensor_msgs::CameraInfo camera_info = WaitForMessage<sensor_msgs::CameraInfo>::get(camera_info_topic);
     nbv_planning::SensorModel::ProjectionMatrix P(camera_info.P.data());
-    nbv_planning::SensorModel sensor_model(camera_info.height, camera_info.width, P, 4, 0.001,50);
+    nbv_planning::SensorModel sensor_model(camera_info.height, camera_info.width, P, 4, 0.15,50);
 
     m_planner = nbv_planning::NBVFinderROS::Ptr(new nbv_planning::NBVFinderROS(sensor_model, nh_));
 
@@ -418,7 +461,7 @@ ros::Duration(5.2).sleep();
   {
     ROS_INFO("NBV:Iterative********************************''");
     double ig_curr=score;
-    double ig_next=score-1;
+    double ig_next=score+1;
     Eigen::Affine3d curr_view_pose=view_poses[view];
     std::vector<Eigen::Affine3d> next_view_poses;
     unsigned int t_view;
@@ -526,38 +569,30 @@ ros::Duration(5.2).sleep();
   {
     Eigen::Affine3d view_p;
 
-    geometry_msgs::Pose temp;// =drone_p.pose;
-    geometry_msgs::PoseStamped temp_stamped;
-    geometry_msgs::PoseStamped temp_stamped_trans;
-
-    std::cout << "DRONE TO VIEW TF 1" << std::endl;
-    //transform
-    //listener(ros::Duration(0.1));
-    listener.transformPose("drone_base", drone_p,temp_stamped_trans);
-    //add
-    temp_stamped_trans.pose.position.x-=tf_xyz_rpy[0];
-    temp_stamped_trans.pose.position.y-=tf_xyz_rpy[1];
-    temp_stamped_trans.pose.position.z-=tf_xyz_rpy[2];
+    geometry_msgs::Pose temp;
     
-    tf::Quaternion q(temp_stamped_trans.pose.orientation.x, temp_stamped_trans.pose.orientation.y, temp_stamped_trans.pose.orientation.z, temp_stamped_trans.pose.orientation.w);
+    tf::Quaternion q(drone_p.pose.orientation.x, drone_p.pose.orientation.y, drone_p.pose.orientation.z, drone_p.pose.orientation.w);
     tf::Matrix3x3 m(q);
     double roll, pitch, yaw;
     m.getRPY(roll, pitch, yaw);
+    Eigen::Matrix3d r;
+    tf::matrixTFToEigen(m,r);
+    Eigen::Vector3d p(tf1_xyz_rpy[0],tf1_xyz_rpy[1],tf1_xyz_rpy[2]);
+    Eigen::Vector3d pn = r*p;
+    //add
+    drone_p.pose.position.x+=pn[0];
+    drone_p.pose.position.y+=pn[1];
+    drone_p.pose.position.z+=pn[2];
+    //std::cout << "roll: " << roll << " pitch: " << pitch << " yaw " << yaw << std::endl;
     
-    roll+= tf_xyz_rpy[3];
-    pitch+= tf_xyz_rpy[4];
-    yaw+= tf_xyz_rpy[5];
+    roll+= tf1_xyz_rpy[3];
+    pitch+= tf1_xyz_rpy[4];
+    yaw+= tf1_xyz_rpy[5];
     
-    temp_stamped_trans.pose.orientation=tf::createQuaternionMsgFromRollPitchYaw(roll,pitch,yaw);
-
-    //transfom back
-    ros::Duration(0.2).sleep();
-    std::cout << "DRONE TO VIEW TF 2" << std::endl;
-    listener.transformPose("/world", temp_stamped_trans,temp_stamped);
+    drone_p.pose.orientation=tf::createQuaternionMsgFromRollPitchYaw(roll,pitch,yaw);
 
     //to pose
-    temp=temp_stamped.pose;
-    std::cout << "tf donzo" << std::endl;
+    temp=drone_p.pose;
       
     tf::poseMsgToEigen  (temp,view_p);
 
@@ -570,41 +605,39 @@ ros::Duration(5.2).sleep();
   {
     geometry_msgs::PoseStamped drone_p;
     geometry_msgs::Pose temp;
-    geometry_msgs::PoseStamped temp_stamped;
-    geometry_msgs::PoseStamped temp_stamped_trans;
-
+    
     tf::poseEigenToMsg(view_p,temp);
 
-    temp_stamped.header.frame_id= "/world";
-    temp_stamped.header.stamp = ros::Time::now();
-    temp_stamped.pose=temp;
-    ros::Duration(0.2).sleep();
-    listener.transformPose("drone_base", temp_stamped,temp_stamped_trans);
-
-    tf::Quaternion q(temp_stamped_trans.pose.orientation.x, temp_stamped_trans.pose.orientation.y, temp_stamped_trans.pose.orientation.z, temp_stamped_trans.pose.orientation.w);
+    drone_p.header.frame_id= "/world";
+    drone_p.header.stamp = ros::Time::now();
+    drone_p.pose=temp;
+    
+    tf::Quaternion q(drone_p.pose.orientation.x, drone_p.pose.orientation.y, drone_p.pose.orientation.z, drone_p.pose.orientation.w);
     tf::Matrix3x3 m(q);
+    
+   
     double roll, pitch, yaw;
     m.getRPY(roll, pitch, yaw);
-    roll-=tf_xyz_rpy[3];
-    pitch-= tf_xyz_rpy[4];
-    yaw-= tf_xyz_rpy[5];
+    
    
-    //transform to drone frame
-    //to stamped
-    
-    //temp_stamped_const =temp_stamped;
-    // tf::TransformListener listener2(ros::Duration(10));
-    // tf::Transformer::transformPoint("drone_base", &temp_stamped,temp_stamped_trans);
-    
-    
+     Eigen::Matrix3d r;
+    tf::matrixTFToEigen(m,r);
+    Eigen::Vector3d p(tf2_xyz_rpy[0],tf2_xyz_rpy[1],tf2_xyz_rpy[2]);
+    Eigen::Vector3d pn = r*p;
     //add stuff
-    temp_stamped_trans.pose.orientation=tf::createQuaternionMsgFromRollPitchYaw(roll,pitch,yaw);
-    temp_stamped_trans.pose.position.x+=tf_xyz_rpy[0];
-    temp_stamped_trans.pose.position.y+=tf_xyz_rpy[1];
-    temp_stamped_trans.pose.position.z+=tf_xyz_rpy[2];
+    drone_p.pose.position.x+=pn[0];
+    drone_p.pose.position.y+=pn[1];
+    drone_p.pose.position.z+=pn[2];
+
+    roll-=tf2_xyz_rpy[3];
+    pitch-= tf2_xyz_rpy[4];
+    yaw-= tf2_xyz_rpy[5];
+    
+    
+    
+    drone_p.pose.orientation=tf::createQuaternionMsgFromRollPitchYaw(roll,pitch,yaw);
+    
     //transform again
-    ros::Duration(0.2).sleep();
-    listener.transformPose("/world", temp_stamped_trans,drone_p);
 
     return drone_p;
   }
