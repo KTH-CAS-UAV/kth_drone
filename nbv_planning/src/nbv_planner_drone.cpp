@@ -269,12 +269,12 @@ class nbv_drone_boss
 
     //*********expirimeeentewrt
 
-/*
+
 std::vector<Eigen::Affine3d> next_view_poses;
    for(int i=0;i< vec_circular_vp.size();i++)
    {
 
-     next_view_poses = generate_all_vp(drone_p_to_view_p(vec_circular_vp[i]),10);
+     next_view_poses = generate_all_vp(drone_p_to_view_p(vec_circular_vp[i]),7);
      m_planner->set_candidate_views(next_view_poses);
      unsigned int view;
      double score;
@@ -288,7 +288,7 @@ std::vector<Eigen::Affine3d> next_view_poses;
    }
     int a =1/0;
 
-*/
+
 
 
     //select the next vie point from the circular
@@ -339,25 +339,26 @@ ros::Duration(5.2).sleep();
     //fix the orientation so it fits the camera
     //expiriment
     //best vps:
-    //-0.148387 0.0873946   1.61438 -2.21   0.000475563 -2.61736    1934.87
-    //   -0.208683   0.191592    1.70386 -2.21   0.000475563 -2.61736
+    //0.548483  0.548934  0.977512  -1.57 -1.11022E-016 2.35699 11844.6
 
-    /*
+
+    
     Eigen::Affine3d view_p;
 
     geometry_msgs::Pose temp ;
-    temp.position.x=-0.208683 ;
-    temp.position.y=0.191592 ;
-    temp.position.z=1.70386;
-    temp.orientation=tf::createQuaternionMsgFromRollPitchYaw(-2.21,0.000475563,-2.61736  );
+    temp.position.x=1.548483 ;
+    temp.position.y=0.548934 ;
+    temp.position.z=0.977512;
+    temp.orientation=tf::createQuaternionMsgFromRollPitchYaw(-1.57,-1.11022E-016,2.35699 );
     
       
     tf::poseMsgToEigen  (temp,view_p);
     std::vector<Eigen::Affine3d> next_view_poses;
     next_view_poses.push_back(view_p);
     m_planner->set_candidate_views(next_view_poses);  
+    view_poses=next_view_poses;
 
-*/
+/*
     //Eigen::Affine3d originvp;
     //geometry_msgs::Pose temp_vp2;
     //temp_vp2.orientation=tf::createQuaternionMsgFromRollPitchYaw(-M_PI/2,0,M_PI/2);
@@ -382,10 +383,10 @@ std::vector<Eigen::Affine3d> next_view_poses;
 
    }
     int a =1/0;
+*/
 
 
-
-
+/*
     
     for(int i=0;i< vec_circular_vp.size();i++)
     {
@@ -398,7 +399,7 @@ std::vector<Eigen::Affine3d> next_view_poses;
     //set the planner
     ROS_INFO("NBV: Setting poses");
     m_planner->set_candidate_views(view_poses);  
-
+*/
 
     ros::Duration(0.2).sleep();
     m_planner->publish_views();
@@ -461,7 +462,7 @@ std::vector<Eigen::Affine3d> next_view_poses;
   {
     ROS_INFO("NBV:Iterative********************************''");
     double ig_curr=score;
-    double ig_next=score+1;
+    double ig_next=score-1;
     Eigen::Affine3d curr_view_pose=view_poses[view];
     std::vector<Eigen::Affine3d> next_view_poses;
     unsigned int t_view;
@@ -681,7 +682,7 @@ int main(int argc, char **argv) {
     bool got_view;
 
     //research mode:
-    got_view = nbv_db.m_planner->choose_next_view(false, view, score,true);
+    got_view = nbv_db.m_planner->choose_next_view(false, view, score,false);
 
     //normal
     //got_view = nbv_db.m_planner->choose_next_view(false, view, score,false);

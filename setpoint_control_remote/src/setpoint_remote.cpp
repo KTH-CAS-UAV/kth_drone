@@ -40,6 +40,13 @@
 #include <iostream>
 #include <pcl/io/pcd_io.h>
 #include <pcl/point_types.h>
+//write to file
+#include <ros/ros.h>
+#include <ros/console.h>
+#include <ros/package.h>
+#include <string> 
+#include <fstream>
+
 
 using namespace std;
 
@@ -268,6 +275,17 @@ class cloud_snapshoot
     pcl::PointCloud<pcl::PointXYZRGBNormal> pclCloud;
     fromROSMsg(*cloud_msg, pclCloud);
     pcl::io::savePCDFileASCII (snapshoot_path, pclCloud);
+
+    std::ofstream outfile;
+    string path = ros::package::getPath("setpoint_control_remote") + "/clouds/cloud_" + ss_num.str() + ".txt";
+
+    outfile.open(path.c_str(), std::ios_base::app);
+
+                outfile << cloud_pose.pose.position.x << "," << cloud_pose.pose.position.y << "," << cloud_pose.pose.position.z << ",";
+                outfile << cloud_pose.pose.orientation.x << "," << cloud_pose.pose.orientation.y << "," << cloud_pose.pose.orientation.z << "," << cloud_pose.pose.orientation.w ; 
+                outfile << "\n";               
+
+
     /*
     // Write .ply file.
     pcl::PointCloud<pcl::PointXYZRGBNormal> pclCloud;

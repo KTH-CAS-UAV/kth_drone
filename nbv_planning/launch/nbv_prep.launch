@@ -4,7 +4,7 @@
   <!--gazebo-->
     <include file="$(find px4)/launch/posix_sitl.launch">
       <arg name="vehicle" value="iris_cam" />	
-      <arg name="world" value="$(find uav_model)../../gazebo-assets/worlds/cage2.world" />	
+      <arg name="world" value="$(find uav_model)../../gazebo-assets/worlds/cage4.world" />	
       <arg name="gui" value="true" />		
       <arg name="z" value="0.02" />			
     </include>
@@ -22,7 +22,7 @@
     <include file="$(find uav_model)/launch/uav_tf.launch"/>
 
   <!-- tf and load stuff in parameter server-->
-  <node pkg="tf" type="static_transform_publisher" name="tf_world_target" args="0.0 0.0 1.0 0 0 0 world target 10" />
+  <node pkg="tf" type="static_transform_publisher" name="tf_world_target" args="1.0 0.0 1.0 0 0 0 world target 10" />
   <node pkg="tf" type="static_transform_publisher" name="tf_world_map" args="0.0 0.0 0.0 0 0 0 world map 10" />
   
  <param name="object_height" type="double" value="0.2" />
