@@ -47,7 +47,6 @@ class circle_view_points
     tf::TransformBroadcaster br;
     tf::TransformListener listener;
     ros::NodeHandle nh_;
-    ros::Publisher vp_pub;  
     ros::Subscriber sub_dronepos;
     actionlib::SimpleActionClient<circle_vp::circular_view_pointsAction> ac_circle_vp;
   
@@ -70,13 +69,16 @@ class circle_view_points
     double z_dim;
     //action sending
     bool send_vp_succesfull;
+    ros::Publisher vp_pub; 
 
 
-    circle_view_points():got_params(false),x_dim(8.0),y_dim(8.0),z_dim(8.2),ac_circle_vp("circular_view_points", true),send_vp_succesfull(false)
+    circle_view_points():got_params(false),x_dim(2.0),y_dim(2.0),z_dim(2.2),ac_circle_vp("circular_view_points", true),send_vp_succesfull(false)
     {
       //set up subs/pubs
       vp_pub = nh_.advertise<geometry_msgs::PoseArray>( "circular_view_points", 1 );
       ac_circle_vp.waitForServer();
+              vp_pub = nh_.advertise<geometry_msgs::PoseArray>( "CCCCCCview_points", 1 );
+
 
     }
 
@@ -166,40 +168,91 @@ class circle_view_points
         ROS_ERROR("%s",ex.what());
         ros::Duration(0.1).sleep();
         return;
-        }      
+      }      
 
       //Check if view points are reachible
       int maker=0;
       int count=0;
+      std::vector<int> goodones;
+      std::cout << "viewpointsize: " << circular_view_points.size() << std::endl;
       for(int i=0; i<circular_view_points.size();i++){
         //ROS_INFO("for loop %i",i);
         // se if valid in cage
-        if(fabs(circular_view_points[i].pose.position.x) < x_dim/2 && fabs(circular_view_points[i].pose.position.y) < y_dim/2 &&
-           fabs(circular_view_points[i].pose.position.z) < z_dim){
-          ROS_INFO("valid %i",i);   
+        if(circular_view_points[i].pose.position.x > -x_dim/2 && circular_view_points[i].pose.position.x < x_dim/2 && 
+          circular_view_points[i].pose.position.y > -y_dim/2 && circular_view_points[i].pose.position.y < y_dim/2 &&
+           circular_view_points[i].pose.position.z < z_dim){
+          ROS_INFO("valid %i",i); 
+          goodones.push_back(i);  
         }
         else
         { 
-          circular_view_points.erase(circular_view_points.begin() + i);
+          
+          
           maker=i;
           count++;
           ROS_INFO("rejected %i",i);   
         }
       }
+      //kill the bad ones
+      std::vector<geometry_msgs::PoseStamped> temp1;
+      for (int i = 0; i < goodones.size(); ++i)
+      {
+        temp1.push_back(circular_view_points[goodones[i]]);
+                
+          
+      }
+      circular_view_points=temp1;
+      //std::cout << "maker: " << maker << " , count: " << count << std::endl;
       //make  view point 0t the one after rejection
       std::vector<geometry_msgs::PoseStamped> tempo;
+      int cvp_size=circular_view_points.size()-1;
+      std::cout << "viewpointsize: " << circular_view_points.size() << std::endl;
       for (int i = 0; i < circular_view_points.size(); ++i)
       {
-        if(i+maker-count>=circular_view_points.size())
+        std::cout << "viewpointsize: " << circular_view_points.size() << std::endl;
+
+         std::cout << "maker: " << maker << " , count: " << count << " ,i: " << i << std::endl;
+
+        if((i + maker - count) >= cvp_size)
         {
-          tempo.push_back(circular_view_points[i+maker-count- circular_view_points.size() ]);
+          std::cout << "1 " << (i+maker-count) << "   " << (circular_view_points.size()-1) << std::endl;
+          tempo.push_back(circular_view_points[i+maker - count - cvp_size]);
         }
         else
         {
-          tempo.push_back(circular_view_points[i+maker-count]);
+          if((i + maker - count)>=0)
+          {
+            std::cout << "2" << std::endl;
+            tempo.push_back(circular_view_points[i + maker - count]);
+          }
+          else
+          {
+            std::cout << "3" << std::endl;
+            tempo.push_back(circular_view_points[i]);
+          }
         }
       }
       circular_view_points=tempo;
+      std::cout << "we have #: " << circular_view_points.size() << " ,number of viewpoints "  << std::endl;
+
+      //publish view points
+      geometry_msgs::PoseArray poseArray; 
+      poseArray.header.stamp = ros::Time::now();
+      poseArray.header.frame_id = "/world";
+      for (int i = 0; i < circular_view_points.size(); ++i)
+     {      
+        geometry_msgs::PoseStamped temp_pose;
+        temp_pose.pose.position.x = circular_view_points[i].pose.position.x;
+        temp_pose.pose.position.y = circular_view_points[i].pose.position.y;
+        temp_pose.pose.position.z = circular_view_points[i].pose.position.z;
+
+        temp_pose.pose.orientation.x = circular_view_points[i].pose.orientation.x;
+        temp_pose.pose.orientation.y = circular_view_points[i].pose.orientation.y;
+        temp_pose.pose.orientation.z = circular_view_points[i].pose.orientation.z;
+        temp_pose.pose.orientation.w = circular_view_points[i].pose.orientation.w;;
+        poseArray.poses.push_back(temp_pose.pose);
+     }
+     vp_pub.publish(poseArray);
 
     }
 

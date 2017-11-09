@@ -146,13 +146,17 @@ class nbv_drone_boss
     std::vector<double> target_xyz_dim;
     double stepsize;
     ros::Publisher vp_pub; 
+    //cage
+    double x_dim;
+    double y_dim;
+    double z_dim;
 
     // Create the planner
     nbv_planning::NBVFinderROS::Ptr m_planner;
 
     nbv_drone_boss():as_cloud_snapshoot(nh_, "cloud_snapshoot", boost::bind(&nbv_drone_boss::cloud_snapshoot, this, _1), false),
       as_circular_view_points(nh_, "circular_view_points", boost::bind(&nbv_drone_boss::circular_view_points, this, _1), false),
-      ac_drone_setpoint("setpoint_control_commands", true),stage1(true),stage2(false),stepsize(0.10),got_tf(false)
+      ac_drone_setpoint("setpoint_control_commands", true),stage1(true),stage2(false),stepsize(0.10),got_tf(false),x_dim(2.5),y_dim(2.5),z_dim(2.2)
     {
         ROS_INFO("NBV: starting cloud snap server");
         as_cloud_snapshoot.start();
@@ -432,7 +436,8 @@ ros::Duration(5.2).sleep();
     cloud_update_manual(path_for_cloud,drone_pose);
 
     //update map manully 4: 1.72826,1.00225,0.892492,-0.0101092,-0.0156612,0.865836,-0.49998
-    //geometry_msgs::PoseStamped drone_pose;
+    //geometry_msgs::PoseStampeif(fabs(circular_view_points[i].pose.position.x) < x_dim/2 && fabs(circular_view_points[i].pose.position.y) < y_dim/2 &&
+           fabs(circular_view_points[i].pose.position.z) < z_dim){d drone_pose;
     drone_pose.header.frame_id="/world";
     drone_pose.header.stamp=ros::Time::now();
 
@@ -607,6 +612,12 @@ std::vector<Eigen::Affine3d> next_view_poses;
     {
         ROS_INFO("NBV: iterative whilewith ig_curr");
       next_view_poses = generate_next_vp(curr_view_pose);
+      if(next_view_poses.size()==0)
+      {
+        next_view_poses.push_back(curr_view_pose);
+        break;
+      }
+        
       m_planner->set_candidate_views(next_view_poses); 
       m_planner->publish_volume_marker();
       ros::spinOnce();
@@ -647,8 +658,11 @@ std::vector<Eigen::Affine3d> next_view_poses;
         return false;
 
    
-    //TODO: check for outer bounds
-
+    //check for outer bounds
+    if(vp_pose.pose.position.x > -x_dim/2 && vp_pose.pose.position.x < x_dim/2 && 
+        vp_pose.pose.position.y > -y_dim/2 && vp_pose.pose.position.y < y_dim/2 &&
+           vp_pose.pose.position.z < z_dim)
+        return false;
 
     return true;
 
