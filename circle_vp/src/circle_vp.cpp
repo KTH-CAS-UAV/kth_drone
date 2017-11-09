@@ -169,6 +169,8 @@ class circle_view_points
         }      
 
       //Check if view points are reachible
+      int maker=0;
+      int count=0;
       for(int i=0; i<circular_view_points.size();i++){
         //ROS_INFO("for loop %i",i);
         // se if valid in cage
@@ -179,9 +181,26 @@ class circle_view_points
         else
         { 
           circular_view_points.erase(circular_view_points.begin() + i);
+          maker=i;
+          count++;
           ROS_INFO("rejected %i",i);   
         }
       }
+      //make  view point 0t the one after rejection
+      std::vector<geometry_msgs::PoseStamped> tempo;
+      for (int i = 0; i < circular_view_points.size(); ++i)
+      {
+        if(i+maker-count>=circular_view_points.size())
+        {
+          tempo.push_back(circular_view_points[i+maker-count- circular_view_points.size() ]);
+        }
+        else
+        {
+          tempo.push_back(circular_view_points[i+maker-count]);
+        }
+      }
+      circular_view_points=tempo;
+
     }
 
 

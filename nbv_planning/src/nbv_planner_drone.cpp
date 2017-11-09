@@ -143,6 +143,7 @@ class nbv_drone_boss
     bool got_tf;
     std::vector<double> tf1_xyz_rpy;
     std::vector<double> tf2_xyz_rpy;
+    std::vector<double> target_xyz_dim;
     double stepsize;
     ros::Publisher vp_pub; 
 
@@ -178,6 +179,7 @@ class nbv_drone_boss
     {
         tf::StampedTransform transform1;
         tf::StampedTransform transform2;
+        tf::StampedTransform transform3;
 
 
       // get tf transform from world to target frame
@@ -208,6 +210,11 @@ class nbv_drone_boss
         tf2_xyz_rpy.push_back(pitch2);
         tf2_xyz_rpy.push_back(yaw2);
 
+        listener.lookupTransform("/world", "/target",ros::Time(0), transform2);
+        target_xyz_dim.push_back(transform2.getOrigin().x());
+        target_xyz_dim.push_back(transform2.getOrigin().y());
+        target_xyz_dim.push_back(transform2.getOrigin().z());
+
 
         got_tf=true;        
         ROS_INFO("NBV: Got static tf");
@@ -227,6 +234,8 @@ class nbv_drone_boss
     nbv_planning::setpoint_control_commandsGoal goal;
     goal.command = 1;
     goal.pose = nbv_pose;
+    goal.circular_poses = vec_circular_vp;
+
     // Need boost::bind to pass in the 'this' pointer
     ac_drone_setpoint.sendGoal(goal,
                 boost::bind(&nbv_drone_boss::confirmation_drone_setpoint, this, _1, _2),
@@ -242,6 +251,33 @@ class nbv_drone_boss
   }
 
   //recive cloud_snapshoot
+  void cloud_update_manual(string path, geometry_msgs::PoseStamped pose)
+  {
+    std::cout << "NBV: Number of unobserved cells before the UPDATE*********=";
+    std::flush(std::cout);
+    std::cout << m_planner->count_unobserved_cells() << std::endl;
+
+    //manuly update the map
+    Eigen::Affine3d cloud_pose = drone_p_to_view_p(pose);
+    ROS_INFO("Loading clouds from  disk...");
+    nbv_planning::NBVFinder::CloudPtr cloud(new nbv_planning::NBVFinder::Cloud);
+
+    if (pcl::io::loadPCDFile<pcl::PointXYZRGB>(path,*cloud) == -1) {
+            PCL_ERROR ("Couldn't read file pcd file\n");
+            return ;
+    }
+            
+
+    ROS_INFO("NBV: Updating map Manully");
+    m_planner->update_current_volume(cloud, cloud_pose);
+    m_planner->publish_octomap();
+    std::cout << "NBV: Number of unobserved cells=";
+    std::flush(std::cout);
+    std::cout << m_planner->count_unobserved_cells() << std::endl;
+    ROS_INFO("NBV: Map  updated Manully");
+
+
+  }
   void cloud_snapshoot(const nbv_planning::cloud_snapshootGoalConstPtr &goal)
   {
     //recived the path to the saved point cloud
@@ -269,7 +305,7 @@ class nbv_drone_boss
 
     //*********expirimeeentewrt
 
-
+/*
 std::vector<Eigen::Affine3d> next_view_poses;
    for(int i=0;i< vec_circular_vp.size();i++)
    {
@@ -287,7 +323,7 @@ std::vector<Eigen::Affine3d> next_view_poses;
 
    }
     int a =1/0;
-
+*/
 
 
 
@@ -304,7 +340,7 @@ ros::Duration(5.2).sleep();
     double score;
     unsigned int view;
     bool got_view;
-    got_view = m_planner->choose_next_view(true, view, score,false);
+    got_view = m_planner->choose_next_view(true, view, score,true);
     std::cout << "NBV: next best view is: " << view << std::endl;
 
     iterative_view_points(view,score);
@@ -329,6 +365,9 @@ ros::Duration(5.2).sleep();
     //recived a target:
     Eigen::Vector3f origin(goal->target[0],goal->target[1],goal->target[2]);
     Eigen::Vector3f extents(goal->size[0],goal->size[1],goal->size[2]);
+    target_xyz_dim.push_back(extents[0]);
+    target_xyz_dim.push_back(extents[1]);
+    target_xyz_dim.push_back(extents[2]);
     nbv_planning::TargetVolume volume(0.05, origin, extents);
     ROS_INFO("NBV: updating volume");
     m_planner->set_target_volume(volume);
@@ -338,18 +377,116 @@ ros::Duration(5.2).sleep();
 
     //fix the orientation so it fits the camera
     //expiriment
+    
+
+/*
+//update map manully 1.68905,0.668117,0.916605,-0.00556906,-0.0124325,0.92396,-0.382246
+    geometry_msgs::PoseStamped drone_pose;
+    drone_pose.header.frame_id="/world";
+    drone_pose.header.stamp=ros::Time::now();
+
+    drone_pose.pose.position.x=1.68905;
+    drone_pose.pose.position.y=0.668117;
+    drone_pose.pose.position.z=0.916605;
+    drone_pose.pose.orientation.x=-0.00556906;
+    drone_pose.pose.orientation.y=-0.0124325;
+    drone_pose.pose.orientation.z=0.92396;
+    drone_pose.pose.orientation.w=-0.382246;
+
+    string path_for_cloud="/home/mwelle/catkin_ws/src/kth_drone/setpoint_control_remote/clouds/best_vp/cloud_0.pcd";
+
+    cloud_update_manual(path_for_cloud,drone_pose);
+
+    //update map manully 2: 0.162389,-0.675585,0.901314,0.0156557,-0.0187549,-0.258359,-0.96574
+    //geometry_msgs::PoseStamped drone_pose;
+    drone_pose.header.frame_id="/world";
+    drone_pose.header.stamp=ros::Time::now();
+
+    drone_pose.pose.position.x=0.162389;
+    drone_pose.pose.position.y=-0.675585;
+    drone_pose.pose.position.z=0.901314;
+    drone_pose.pose.orientation.x=0.0156557;
+    drone_pose.pose.orientation.y=-0.0187549;
+    drone_pose.pose.orientation.z=-0.258359;
+    drone_pose.pose.orientation.w=-0.96574;
+
+    path_for_cloud="/home/mwelle/catkin_ws/src/kth_drone/setpoint_control_remote/clouds/best_vp/cloud_1.pcd";
+
+    cloud_update_manual(path_for_cloud,drone_pose);
+
+    //update map manully 3: 0.361153,0.82193,1.00611,0.00618054,-0.00873569,0.500321,-0.865774
+    //geometry_msgs::PoseStamped drone_pose;
+    drone_pose.header.frame_id="/world";
+    drone_pose.header.stamp=ros::Time::now();
+
+    drone_pose.pose.position.x=0.361153;
+    drone_pose.pose.position.y=0.82193;
+    drone_pose.pose.position.z=1.00611;
+    drone_pose.pose.orientation.x=0.00618054;
+    drone_pose.pose.orientation.y=-0.00873569;
+    drone_pose.pose.orientation.z=0.500321;
+    drone_pose.pose.orientation.w=-0.865774;
+
+    path_for_cloud="/home/mwelle/catkin_ws/src/kth_drone/setpoint_control_remote/clouds/best_vp/cloud_2.pcd";
+
+    cloud_update_manual(path_for_cloud,drone_pose);
+
+    //update map manully 4: 1.72826,1.00225,0.892492,-0.0101092,-0.0156612,0.865836,-0.49998
+    //geometry_msgs::PoseStamped drone_pose;
+    drone_pose.header.frame_id="/world";
+    drone_pose.header.stamp=ros::Time::now();
+
+    drone_pose.pose.position.x=1.72826;
+    drone_pose.pose.position.y=1.00225;
+    drone_pose.pose.position.z=0.892492;
+    drone_pose.pose.orientation.x=-0.0101092;
+    drone_pose.pose.orientation.y=-0.0156612;
+    drone_pose.pose.orientation.z=0.865836;
+    drone_pose.pose.orientation.w=-0.49998;
+
+    path_for_cloud="/home/mwelle/catkin_ws/src/kth_drone/setpoint_control_remote/clouds/best_vp/cloud_3.pcd";
+
+    cloud_update_manual(path_for_cloud,drone_pose);
+
+
+    //update map manully 5: 0.589528,1.15483,0.987938,0.00293094,-0.0201077,0.608644,-0.793184
+    //geometry_msgs::PoseStamped drone_pose;
+    drone_pose.header.frame_id="/world";
+    drone_pose.header.stamp=ros::Time::now();
+
+    drone_pose.pose.position.x=0.589528;
+    drone_pose.pose.position.y=1.15483;
+    drone_pose.pose.position.z=0.987938;
+    drone_pose.pose.orientation.x=0.00293094;
+    drone_pose.pose.orientation.y=-0.0201077;
+    drone_pose.pose.orientation.z=0.608644;
+    drone_pose.pose.orientation.w=-0.793184;
+
+    path_for_cloud="/home/mwelle/catkin_ws/src/kth_drone/setpoint_control_remote/clouds/best_vp/cloud_4.pcd";
+
+    cloud_update_manual(path_for_cloud,drone_pose);
+
+
+
+*/
+
+
+
     //best vps:
-    //0.548483  0.548934  0.977512  -1.57 -1.11022E-016 2.35699 11844.6
-
-
+    //stage01: 0.548483  0.548934  0.977512  -1.57 -1.11022E-016 2.35699 11844.6
+    //stage02:0.205075  -0.574972 0.977353  -1.57 -3.88578E-016 -1.0464 5657
+    //stage03: 0.425028  0.794925  0.977353  -1.57 -1.66533E-016 -2.6172 4567.89
+    //stage04: 1.62416  0.882183  0.977273  -1.57 -2.77556E-016 2.61879 2908.29
+    //stage05: 0.624403 1.01322 0.977273  -1.57 -2.498E-016 -2.879  2829.62
+/*
     
     Eigen::Affine3d view_p;
 
     geometry_msgs::Pose temp ;
-    temp.position.x=1.548483 ;
-    temp.position.y=0.548934 ;
-    temp.position.z=0.977512;
-    temp.orientation=tf::createQuaternionMsgFromRollPitchYaw(-1.57,-1.11022E-016,2.35699 );
+    temp.position.x=0.624403 ;
+    temp.position.y=1.01322;
+    temp.position.z=0.977273;
+    temp.orientation=tf::createQuaternionMsgFromRollPitchYaw(-1.57,-2.498E-016,-2.879 );
     
       
     tf::poseMsgToEigen  (temp,view_p);
@@ -357,17 +494,17 @@ ros::Duration(5.2).sleep();
     next_view_poses.push_back(view_p);
     m_planner->set_candidate_views(next_view_poses);  
     view_poses=next_view_poses;
+*/
 
-/*
     //Eigen::Affine3d originvp;
     //geometry_msgs::Pose temp_vp2;
     //temp_vp2.orientation=tf::createQuaternionMsgFromRollPitchYaw(-M_PI/2,0,M_PI/2);
 
      //*********expirimeeentewrt
-
+/*
 
 std::vector<Eigen::Affine3d> next_view_poses;
-   for(int i=0;i< vec_circular_vp.size();i++)
+   for(int i=15;i< vec_circular_vp.size();i++)
    {
 
      next_view_poses = generate_all_vp(drone_p_to_view_p(vec_circular_vp[i]),7);
@@ -383,10 +520,10 @@ std::vector<Eigen::Affine3d> next_view_poses;
 
    }
     int a =1/0;
+
 */
 
 
-/*
     
     for(int i=0;i< vec_circular_vp.size();i++)
     {
@@ -399,7 +536,7 @@ std::vector<Eigen::Affine3d> next_view_poses;
     //set the planner
     ROS_INFO("NBV: Setting poses");
     m_planner->set_candidate_views(view_poses);  
-*/
+
 
     ros::Duration(0.2).sleep();
     m_planner->publish_views();
@@ -462,7 +599,7 @@ std::vector<Eigen::Affine3d> next_view_poses;
   {
     ROS_INFO("NBV:Iterative********************************''");
     double ig_curr=score;
-    double ig_next=score-1;
+    double ig_next=score+1;
     Eigen::Affine3d curr_view_pose=view_poses[view];
     std::vector<Eigen::Affine3d> next_view_poses;
     unsigned int t_view;
@@ -498,6 +635,25 @@ std::vector<Eigen::Affine3d> next_view_poses;
 
   }
 
+  bool check_vp_possible(Eigen::Affine3d vp)
+  {
+    geometry_msgs::PoseStamped vp_pose= view_p_to_drone_p(vp);
+    std::cout << "checking...." << std::endl;
+    //check if collision with target
+    
+    if(vp_pose.pose.position.x > target_xyz_dim[0] - target_xyz_dim[3]/2 && vp_pose.pose.position.x < target_xyz_dim[0] + target_xyz_dim[3]/2 &&
+        vp_pose.pose.position.y > target_xyz_dim[1] - target_xyz_dim[4]/2 && vp_pose.pose.position.y < target_xyz_dim[1] + target_xyz_dim[4]/2 &&
+        vp_pose.pose.position.z > target_xyz_dim[2] - target_xyz_dim[5]/2 && vp_pose.pose.position.z < target_xyz_dim[2] + target_xyz_dim[5]/2)
+        return false;
+
+   
+    //TODO: check for outer bounds
+
+
+    return true;
+
+  }
+
 
   std::vector<Eigen::Affine3d> generate_next_vp(Eigen::Affine3d start_vp)
   {
@@ -509,22 +665,28 @@ std::vector<Eigen::Affine3d> next_view_poses;
         temp_vp=start_vp;
         switch(i){
             case 0: temp_vp.translate(Eigen::Vector3d(0,0.0,-stepsize));
-                    next_vp.push_back(temp_vp);
+                    if(check_vp_possible(temp_vp))
+                        next_vp.push_back(temp_vp);
                     break;
             case 1: temp_vp.translate(Eigen::Vector3d(0,+stepsize,0));
-                    next_vp.push_back(temp_vp);
+                    if(check_vp_possible(temp_vp))
+                        next_vp.push_back(temp_vp);
                     break;
             case 2: temp_vp.translate(Eigen::Vector3d(-stepsize,0.0,0));
-                    next_vp.push_back(temp_vp);
+                    if(check_vp_possible(temp_vp))
+                        next_vp.push_back(temp_vp);
                     break;
             case 3: temp_vp.translate(Eigen::Vector3d(+stepsize,0.0,0));
-                    next_vp.push_back(temp_vp);
+                    if(check_vp_possible(temp_vp))
+                        next_vp.push_back(temp_vp);
                     break;
             case 4: temp_vp.translate(Eigen::Vector3d(0,-stepsize,0));
-                    next_vp.push_back(temp_vp);
+                    if(check_vp_possible(temp_vp))    
+                        next_vp.push_back(temp_vp);
                     break;
             case 5: temp_vp.translate(Eigen::Vector3d(0,0.0,+stepsize));
-                    next_vp.push_back(temp_vp);
+                    if(check_vp_possible(temp_vp))
+                        next_vp.push_back(temp_vp);
                     break;
 
         }
@@ -656,9 +818,16 @@ int main(int argc, char **argv) {
     //generate the boss
     nbv_drone_boss nbv_db;
 
+    
+
     //set up sensor model
     ROS_INFO("NBV: get sensor model");
     nbv_db.camera_config_from_topic();
+
+
+    
+
+
     //get static transform
      while(ros::ok() && !nbv_db.got_tf)
     {
@@ -668,6 +837,11 @@ int main(int argc, char **argv) {
         ros::Duration(0.2).sleep();
     }
     ROS_INFO("NBV: preparations complete");
+
+    
+
+
+
     //we wait for the circular view points and the target
     while(ros::ok() && nbv_db.stage1)
     {
@@ -682,7 +856,7 @@ int main(int argc, char **argv) {
     bool got_view;
 
     //research mode:
-    got_view = nbv_db.m_planner->choose_next_view(false, view, score,false);
+    got_view = nbv_db.m_planner->choose_next_view(false, view, score,true);
 
     //normal
     //got_view = nbv_db.m_planner->choose_next_view(false, view, score,false);

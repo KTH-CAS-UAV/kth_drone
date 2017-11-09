@@ -66,10 +66,14 @@ class drone_setpoint
   public:
     //vars
     geometry_msgs::PoseStamped target_pose;
+    std::vector<geometry_msgs::PoseStamped> target_path;;
     geometry_msgs::PoseStamped current_pose;
+    bool target_set;
     int mode; //0=IDLE, 1 = moving to targed, 2= holding position
+    int path_index;
     int at_position_counter;
     int at_position_threshold;
+    int at_position_threshold_transfer;
     //position tolleranc
     double errorx;
     double errory;
@@ -84,8 +88,8 @@ class drone_setpoint
   
   //constructor
   drone_setpoint(std::string name) :
-    as_drone_setpoint(nh_, name, boost::bind(&drone_setpoint::recived_command, this, _1), false),
-    action_name_(name), mode(0),at_position_counter(0),at_position_threshold(50),tolx(0.1),toly(0.1),tolz(0.1),tolyaw(15.0)
+    as_drone_setpoint(nh_, name, boost::bind(&drone_setpoint::recived_command, this, _1), false),target_set(false),
+    action_name_(name), mode(0),at_position_counter(0),at_position_threshold(50),at_position_threshold_transfer(10),tolx(0.1),toly(0.1),tolz(0.1),tolyaw(15.0),path_index(0)
   {
 
     //starting action server
@@ -117,14 +121,17 @@ class drone_setpoint
   void current_pointCallback(const geometry_msgs::PoseStamped::ConstPtr& msg)
     {
       current_pose.pose=msg->pose;
+
+      if(target_path.size()==0)
+        return;
       //check position
       //compare target with current pos
       //calculate the error
       
-      errorx=fabs(target_pose.pose.position.x-current_pose.pose.position.x);
-      errory=fabs(target_pose.pose.position.y-current_pose.pose.position.y);
-      errorz=fabs(target_pose.pose.position.z-current_pose.pose.position.z); 
-      erroryaw = distance(tf::getYaw(target_pose.pose.orientation)*(180/M_PI),tf::getYaw(current_pose.pose.orientation)*(180/M_PI));
+      errorx=fabs(target_path[path_index].pose.position.x-current_pose.pose.position.x);
+      errory=fabs(target_path[path_index].pose.position.y-current_pose.pose.position.y);
+      errorz=fabs(target_path[path_index].pose.position.z-current_pose.pose.position.z); 
+      erroryaw = distance(tf::getYaw(target_path[path_index].pose.orientation)*(180/M_PI),tf::getYaw(current_pose.pose.orientation)*(180/M_PI));
       
       //std::cout<< "Current error: x: " << errorx << " , y: " << errory << " ,z: " << errorz << " ,yaw: " << erroryaw << std::endl;
       if(errorx< tolx && errory< toly && errorz< tolz && erroryaw < tolyaw)
@@ -137,12 +144,83 @@ class drone_setpoint
       {
           at_position_counter=0;
       }
-      if(at_position_counter>=at_position_threshold)
+      if(at_position_counter>=at_position_threshold_transfer && target_set)
       {
-          mode=2;
-          at_position_counter=0;
+        std::cout << "updating path index: " << path_index << std::endl;
+          //mode=1;
+          path_index++;
+          if(path_index>=target_path.size())
+            path_index=target_path.size()-1;
+          
+          if(at_position_counter>=at_position_threshold && path_index == target_path.size()-1 && target_set)
+          {
+            std::cout << "switching modes" << std::endl;
+              mode=2;
+              at_position_counter=0;
+              target_pose=target_path[path_index];
+              target_set =false;
+          }
+
+      }
+      
+
+    }
+
+  std::vector<geometry_msgs::PoseStamped> generate_safe_path(std::vector<geometry_msgs::PoseStamped> circular_points, geometry_msgs::PoseStamped target_point)
+  {
+
+     std::vector<geometry_msgs::PoseStamped> safe_path;
+    //check position of drone
+    //find nearest cicular point
+    int start_circle_index=0;
+    double dis = 0;
+    double dis_min=999999999999;
+    for(int i=0; i < circular_points.size(); i++)
+    {
+      dis=fabs(current_pose.pose.position.x - circular_points[i].pose.position.x) + fabs(current_pose.pose.position.y - circular_points[i].pose.position.y) + fabs(current_pose.pose.position.z - circular_points[i].pose.position.z);
+      if(dis<dis_min)
+      {
+        dis_min=dis;
+        start_circle_index=i;
       }
     }
+    //find nearest circular to goal
+    int goal_circle_index=0;
+    dis = 0;
+    dis_min=999999999999;
+    for(int i=0; i < circular_points.size(); i++)
+    {
+      dis=fabs(target_point.pose.position.x - circular_points[i].pose.position.x) + fabs(target_point.pose.position.y - circular_points[i].pose.position.y) + fabs(target_point.pose.position.z - circular_points[i].pose.position.z);
+      if(dis<dis_min)
+      {
+        dis_min=dis;
+        goal_circle_index=i;
+      }
+    }
+
+    //path to the right
+    if(goal_circle_index>=start_circle_index)
+    {
+      for(int i=0;i<(goal_circle_index- start_circle_index+1 );i++)
+      {
+        safe_path.push_back(circular_points[i+start_circle_index]);
+      }
+      safe_path.push_back(target_point);
+      std::cout <<"****************'' safe path generatet, to the right lenght: " << safe_path.size() << " goal id: " << goal_circle_index << " , start id: " << start_circle_index << std::endl;
+      return safe_path;
+    }
+    else
+    {
+      for(int i=0;i<(start_circle_index-goal_circle_index+1 );i++)
+      {
+        safe_path.push_back(circular_points[start_circle_index-i]);
+      }
+      safe_path.push_back(target_point);
+      std::cout <<"****************'' safe path generatet, to the left lenght: " << safe_path.size() << " goal id: " << goal_circle_index << " , start id: " << start_circle_index << std::endl;
+      return safe_path;
+    }
+
+  }
 
 
   void recived_command(const setpoint_control_remote::setpoint_control_commandsGoalConstPtr &goal)
@@ -150,8 +228,9 @@ class drone_setpoint
     //move to new position
     if(goal->command==1)
     {
-        target_pose= goal->pose;
+        target_path=generate_safe_path(goal->circular_poses, goal->pose);
         mode=1;
+        path_index=0;
     }
     else //switch to IDLE (when flying the drone will land)
     {
@@ -322,6 +401,8 @@ void targetCallback(const geometry_msgs::PoseStamped::ConstPtr& msg)
       targetPoint.header.frame_id="world";
       //ROS_INFO_STREAM("targetPointCallback");
 
+
+
     }
 
 
@@ -408,7 +489,9 @@ int main(int argc, char **argv)
           ROS_INFO_THROTTLE(5, "Mode: 1 (go to target)");
             new_pose=true;
             //get to new target
-            local_pos_pub.publish(ds.target_pose);
+            //std::cout << " moving to safe path index: " << ds.path_index << std::endl;
+            local_pos_pub.publish(ds.target_path[ds.path_index]);
+            ds.target_set=true;
 
         }
         if(ds.mode==2)
