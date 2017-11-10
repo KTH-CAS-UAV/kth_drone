@@ -156,7 +156,7 @@ class nbv_drone_boss
 
     nbv_drone_boss():as_cloud_snapshoot(nh_, "cloud_snapshoot", boost::bind(&nbv_drone_boss::cloud_snapshoot, this, _1), false),
       as_circular_view_points(nh_, "circular_view_points", boost::bind(&nbv_drone_boss::circular_view_points, this, _1), false),
-      ac_drone_setpoint("setpoint_control_commands", true),stage1(true),stage2(false),stepsize(0.10),got_tf(false),x_dim(2.5),y_dim(2.5),z_dim(2.2)
+      ac_drone_setpoint("setpoint_control_commands", true),stage1(true),stage2(false),stepsize(0.10),got_tf(false),x_dim(2.0),y_dim(2.0),z_dim(2.2)
     {
         ROS_INFO("NBV: starting cloud snap server");
         as_cloud_snapshoot.start();
@@ -662,9 +662,9 @@ std::vector<Eigen::Affine3d> next_view_poses;
     if(vp_pose.pose.position.x > -x_dim/2 && vp_pose.pose.position.x < x_dim/2 && 
         vp_pose.pose.position.y > -y_dim/2 && vp_pose.pose.position.y < y_dim/2 &&
            vp_pose.pose.position.z < z_dim)
-        return false;
+        return true;
 
-    return true;
+    return false;
 
   }
 

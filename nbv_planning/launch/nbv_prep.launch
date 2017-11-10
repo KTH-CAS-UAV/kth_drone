@@ -30,7 +30,7 @@
  <param name="cam_alpha" type="double" value="45.0" />
  <param name="cam_beta" type="double" value="10.0" />
  <param name="cam_tau" type="double" value="0.0" />
- <param name="view_point_number" type="double" value="24.0" />	
+ <param name="view_point_number" type="double" value="12.0" />	
 		
 
   <!-- Octomap Server -->
