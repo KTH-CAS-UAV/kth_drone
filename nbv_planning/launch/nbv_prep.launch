@@ -45,5 +45,11 @@
      <!-- data source to integrate (PointCloud2) -->
       <remap from="cloud_in" to="/camera/depth/points" />
     </node>
+    
+    
+  <!-- relay simulation -->
+  <node pkg="topic_tools" type="relay" name="relay_camera_info" args="/camera/depth/camera_info /camera_depth_info"/>
+  
+  <node pkg="topic_tools" type="relay" name="relay_cloud" args="/camera/depth/points /camera_pointcloud"/>
 	
 </launch>

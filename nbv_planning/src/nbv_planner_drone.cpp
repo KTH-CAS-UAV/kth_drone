@@ -74,7 +74,7 @@
 #include <actionlib/client/simple_action_client.h>
 #include <actionlib/server/simple_action_server.h>
 #include <setpoint_control_remote/setpoint_control_commandsAction.h>
-#include <setpoint_control_remote/cloud_snapshootAction.h> 
+#include <save_cloud/cloud_snapshootAction.h> 
 
 #include <string>
 
@@ -188,8 +188,11 @@ class nbv_drone_boss
 
       // get tf transform from world to target frame
       try{
-        //listener.lookupTransform("/drone_base", "/d_camera::camera_link",ros::Time(0), transform1);
-        listener.lookupTransform("/uav13/mocap_link", "/camera_depth_optical_frame",ros::Time(0), transform1);
+        if(listener.frameExists("/uav13/mocap_link"))
+            listener.lookupTransform("/uav13/mocap_link", "/camera_depth_optical_frame",ros::Time(0), transform1);
+        else
+            listener.lookupTransform("/drone_base", "/d_camera::camera_link",ros::Time(0), transform1);
+        
 
         tf1_xyz_rpy.push_back(transform1.getOrigin().x());
         tf1_xyz_rpy.push_back(transform1.getOrigin().y());
@@ -203,8 +206,11 @@ class nbv_drone_boss
         tf1_xyz_rpy.push_back(pitch);
         tf1_xyz_rpy.push_back(yaw);
 
-        //listener.lookupTransform("/d_camera::camera_link", "/drone_base",ros::Time(0), transform2);
-        listener.lookupTransform("/camera_depth_optical_frame", "/uav13/mocap_link",ros::Time(0), transform2);
+        
+        if(listener.frameExists("/uav13/mocap_link"))
+          listener.lookupTransform("/camera_depth_optical_frame", "/uav13/mocap_link",ros::Time(0), transform2);
+        else
+          listener.lookupTransform("/d_camera::camera_link", "/drone_base",ros::Time(0), transform2);
 
         tf2_xyz_rpy.push_back(transform2.getOrigin().x());
         tf2_xyz_rpy.push_back(transform2.getOrigin().y());
@@ -378,7 +384,9 @@ ros::Duration(5.2).sleep();
     target_xyz_dim.push_back(extents[2]);
     nbv_planning::TargetVolume volume(0.05, origin, extents);
     ROS_INFO("NBV: updating volume");
+    std::cout << origin << "  " << extents << std::endl;
     m_planner->set_target_volume(volume);
+    ROS_INFO("NBV: updating volume done");
 
     //recived the circular vew points
     vec_circular_vp=goal->circular_view_points;
@@ -591,10 +599,13 @@ std::vector<Eigen::Affine3d> next_view_poses;
     
     std::string camera_info_topic, camera_topic;
 
+    
     //nh_.param("camera_info_topic", camera_info_topic, std::string("/camera/depth/camera_info"));
     //nh_.param("camera_topic", camera_topic, std::string("/camera/depth/camera_info"));
-    nh_.param("camera_info_topic", camera_info_topic, std::string("/camera/depth_registered/camera_info"));
-    nh_.param("camera_topic", camera_topic, std::string("/camera/depth_registered/camera_info"));
+    //nh_.param("camera_info_topic", camera_info_topic, std::string("/camera/depth_registered/camera_info"));
+    //nh_.param("camera_topic", camera_topic, std::string("/camera/depth_registered/camera_info"));
+    nh_.param("camera_info_topic", camera_info_topic, std::string("/camera_depth_info"));
+    nh_.param("camera_topic", camera_topic, std::string("/camera_depth_info"));
 
     // Get a sensor_msgs::CameraInfo message and use it to construct the sensor model
     ROS_INFO_STREAM("Waiting for camera info on " << camera_info_topic );

@@ -79,9 +79,10 @@ class take_cloud_snapshoot
       as_take_cloud_snap.start(); 
       ac_cloud_snap.waitForServer(); //wait for nbv server
 
-      //sub_cloud = nh_.subscribe("/camera/depth/points", 1, &cloud_snapshoot::input_cloud_cb, this);
+      //sub_cloud = nh_.subscribe("/camera/depth/points", 1, &take_cloud_snapshoot::input_cloud_cb, this);
 
-      sub_cloud = nh_.subscribe("/camera/depth_registered/points", 1, &take_cloud_snapshoot::input_cloud_cb, this);
+      //sub_cloud = nh_.subscribe("/camera/depth_registered/points", 1, &take_cloud_snapshoot::input_cloud_cb, this);
+      sub_cloud = nh_.subscribe("/camera_pointcloud", 1, &take_cloud_snapshoot::input_cloud_cb, this);
 
 
 
@@ -94,6 +95,7 @@ class take_cloud_snapshoot
     //recive take snapshoot comand
     void t_cloud_snapshoot(const save_cloud::take_cloud_snapshootGoalConstPtr &goal)
   {
+    ROS_INFO("SC:Recived Snapshoot comand***");
     int command=goal->command;
     cloud_pose=goal->cloud_pose;
     if(command==1){
@@ -132,7 +134,7 @@ class take_cloud_snapshoot
 }
 
   //calback for the pointcloud
-  void input_cloud_cb(const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
+  void input_cloud_cb(const sensor_msgs::PointCloud2::ConstPtr& cloud_msg)
   {
     if(save_help_cloud)
     {
@@ -144,10 +146,14 @@ class take_cloud_snapshoot
       ROS_INFO_STREAM("Received point help cloud with " << cloud_msg->height*cloud_msg->width << " points.");
 
 
-      pcl::PCDWriter writer;
-      pcl::PointCloud<pcl::PointXYZRGBNormal> pclCloud_help;
-      fromROSMsg(*cloud_msg, pclCloud_help);
-      pcl::io::savePCDFileASCII (snapshoot_path_help, pclCloud_help);
+      //pcl::PCDWriter writer;
+      //CloudPtr pclCloud_help(new Cloud());
+      pcl::PointCloud<pcl::PointXYZRGB>::Ptr pclCloud_help(new pcl::PointCloud<pcl::PointXYZRGB>);
+      pcl::fromROSMsg(*cloud_msg, *pclCloud_help);
+      ROS_INFO("Step 1");
+      pclCloud_help->header = pcl_conversions::toPCL(cloud_msg->header);
+      ROS_INFO("SC: Safe help cloud!!!!!!");
+      pcl::io::savePCDFileBinary(snapshoot_path_help, *pclCloud_help);
 
       std::ofstream outfile;
       string path_help = ros::package::getPath("save_cloud") + "/clouds/cloud_help" + ss_num_help.str() + ".txt";
@@ -175,10 +181,13 @@ class take_cloud_snapshoot
     ROS_INFO_STREAM("Received point cloud with " << cloud_msg->height*cloud_msg->width << " points.");
 
 
-    pcl::PCDWriter writer;
-    pcl::PointCloud<pcl::PointXYZRGBNormal> pclCloud;
-    fromROSMsg(*cloud_msg, pclCloud);
-    pcl::io::savePCDFileASCII (snapshoot_path, pclCloud);
+    //pcl::PCDWriter writer;
+    //CloudPtr pclCloud(new Cloud());
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr pclCloud(new pcl::PointCloud<pcl::PointXYZRGB>);
+    fromROSMsg(*cloud_msg, *pclCloud);
+    pclCloud->header = pcl_conversions::toPCL(cloud_msg->header);
+    pcl::io::savePCDFileBinary(snapshoot_path, *pclCloud);
+    ROS_INFO("SC: Safe real cloud!!!!!!");
 
     std::ofstream outfile;
     string path = ros::package::getPath("save_cloud") + "/clouds/cloud_" + ss_num.str() + ".txt";

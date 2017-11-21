@@ -77,6 +77,7 @@ namespace nbv_planning {
 
     bool NBVFinder::set_target_volume(TargetVolume volume) {
         m_target_volume = volume;
+        std::cout << "creating tree" << std::endl;
         create_octree();
         return false;
     }
