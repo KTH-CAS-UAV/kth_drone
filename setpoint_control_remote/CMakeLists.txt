@@ -29,7 +29,7 @@ find_package(Boost REQUIRED COMPONENTS system)
     FILES
 	DIRECTORY action
     FILES setpoint_control_commands.action
-    cloud_snapshoot.action
+    take_cloud_snapshoot.action
  )
 
 ## Generate added messages and services with any dependencies listed here
