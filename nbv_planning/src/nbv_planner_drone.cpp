@@ -188,7 +188,9 @@ class nbv_drone_boss
 
       // get tf transform from world to target frame
       try{
-        listener.lookupTransform("/drone_base", "/d_camera::camera_link",ros::Time(0), transform1);
+        //listener.lookupTransform("/drone_base", "/d_camera::camera_link",ros::Time(0), transform1);
+        listener.lookupTransform("/uav13/mocap_link", "/camera_depth_optical_frame",ros::Time(0), transform1);
+
         tf1_xyz_rpy.push_back(transform1.getOrigin().x());
         tf1_xyz_rpy.push_back(transform1.getOrigin().y());
         tf1_xyz_rpy.push_back(transform1.getOrigin().z());
@@ -201,7 +203,9 @@ class nbv_drone_boss
         tf1_xyz_rpy.push_back(pitch);
         tf1_xyz_rpy.push_back(yaw);
 
-        listener.lookupTransform("/d_camera::camera_link", "/drone_base",ros::Time(0), transform2);
+        //listener.lookupTransform("/d_camera::camera_link", "/drone_base",ros::Time(0), transform2);
+        listener.lookupTransform("/camera_depth_optical_frame", "/uav13/mocap_link",ros::Time(0), transform2);
+
         tf2_xyz_rpy.push_back(transform2.getOrigin().x());
         tf2_xyz_rpy.push_back(transform2.getOrigin().y());
         tf2_xyz_rpy.push_back(transform2.getOrigin().z());
@@ -587,8 +591,10 @@ std::vector<Eigen::Affine3d> next_view_poses;
     
     std::string camera_info_topic, camera_topic;
 
-    nh_.param("camera_info_topic", camera_info_topic, std::string("/camera/depth/camera_info"));
-    nh_.param("camera_topic", camera_topic, std::string("/camera/depth/camera_info"));
+    //nh_.param("camera_info_topic", camera_info_topic, std::string("/camera/depth/camera_info"));
+    //nh_.param("camera_topic", camera_topic, std::string("/camera/depth/camera_info"));
+    nh_.param("camera_info_topic", camera_info_topic, std::string("/camera/depth_registered/camera_info"));
+    nh_.param("camera_topic", camera_topic, std::string("/camera/depth_registered/camera_info"));
 
     // Get a sensor_msgs::CameraInfo message and use it to construct the sensor model
     ROS_INFO_STREAM("Waiting for camera info on " << camera_info_topic );

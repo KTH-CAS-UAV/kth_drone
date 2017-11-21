@@ -7,6 +7,7 @@
   <node pkg="nbv_planning" type="nbv_drone" name="nbv_drone" output="screen"/>
   <node pkg="circle_vp" type="circle_vp" name="circle_vp" output="screen"/>
   <node pkg="setpoint_control_remote" type="setpoint_control_remote" name="setpoint_control_remote" output="screen"/>
+ <node pkg="save_cloud" type="save_cloud" name="save_cloud" output="screen"/>
   
  
 	

@@ -1,0 +1,9 @@
+#goal definition
+string cloud_path
+geometry_msgs/PoseStamped cloud_pose
+---
+#result definition
+int32 confirmation
+---
+#feedback
+int32 progress

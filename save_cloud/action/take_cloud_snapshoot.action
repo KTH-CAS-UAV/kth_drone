@@ -1,0 +1,9 @@
+#goal definition
+int32 command
+geometry_msgs/PoseStamped cloud_pose
+---
+#result definition
+int32 confirmation
+---
+#feedback
+int32 progress
